@@ -23,8 +23,7 @@ dependencies:
     - git clone https://github.com/Rudolph-Miller/roswell-scripts ~/lisp/roswell-scripts
     - cd ~/lisp/roswell-scripts/roswell && ros install gendoc && ros install gh-pages
 
-    - git clone https://github.com/Rudolph-Miller/cl-annot-prove ~/lisp/cl-annot-prove
-    - ros -l ~/lisp/cl-annot-prove/cl-annot-prove.asd install cl-annot-prove
+    - ros install prove
 
   cache_directories:
     - ~/.roswell
@@ -32,7 +31,7 @@ dependencies:
 test:
   override:
     - ros run -- --version
-    - run-annot-prove --with-prove t *.asd
+    - run-prove *.asd
 
 deployment:
   deployment:

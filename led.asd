@@ -13,8 +13,8 @@
   :author "Rudolph Miller"
   :license "MIT"
   :homepage "https://github.com/Rudolph-Miller/led"
-  :depends-on (:cl-syntax
-               :cl-syntax-annot)
+  :depends-on (:alexandria
+               :cl-charms)
   :components ((:module "src"
                 :components
                 ((:file "led"))))

@@ -1,9 +1,5 @@
 (in-package :cl-user)
 (defpackage led
-  (:use :cl
-        :annot.doc))
+  (:use :cl))
 (in-package :led)
 
-;; blah blah blah.
-
-(syntax:use-syntax :annot)
