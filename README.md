@@ -1,4 +1,4 @@
-# LED
+# [WIP] LED
 [![Build Status](https://circleci.com/gh/Rudolph-Miller/led.svg?style=shield)](https://circleci.com/gh/Rudolph-Miller/led)
 
 ## API
