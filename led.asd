@@ -16,8 +16,10 @@
   :depends-on (:alexandria
                :cl-charms)
   :components ((:module "src"
+                :serial t
                 :components
-                ((:file "led"))))
+                ((:file "window")
+                 (:file "led"))))
   :description "[WIP] LED."
   :long-description
   #.(with-open-file (stream (merge-pathnames
