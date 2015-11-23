@@ -18,7 +18,7 @@
   :components ((:module "src"
                 :components
                 ((:file "led"))))
-  :description "LED."
+  :description "[WIP] LED."
   :long-description
   #.(with-open-file (stream (merge-pathnames
                              #p"README.md"
