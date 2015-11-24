@@ -97,7 +97,7 @@
      (finalize)))
 
 
-(defmaco with-debug-window (options &body body)
+(defmacro with-debug-window (options &body body)
   (let ((width (getf options :width 50))
         (height (getf options :height 50)))
     `(let ((*window* (make-instance 'debug-window :width ,width :height ,height)))
