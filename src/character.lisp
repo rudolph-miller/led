@@ -7,4 +7,5 @@
   val
   attr)
 
-  
+(defun character-to-ichar (character)
+  (make-ichar :val character))

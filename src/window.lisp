@@ -11,7 +11,9 @@
                 :write-string-at-point
                 :move-cursor
                 :refresh-window
-                :finalize))
+                :finalize)
+  (:import-from :led.line
+                :make-line))
 (in-package :led.window)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -39,29 +41,10 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; window-line
-
-(defstruct window-line
-  (content "")
-  (length))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; functions for window-line
-
-(defun set-line-content (index content &optional (window *window*))
-  (assert (<= (length content) (window-width window)))
-  (let ((line (elt (window-lines window) index)))
-    (setf (window-line-content line) content)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; initialize functions
 
 (defun initialize-window-lines (window)
-  (let ((lines (loop repeat (window-height window)
-                     collecting (make-window-line) into result
-                     finally (return (apply #'vector result)))))
+  (let ((lines (make-array (window-height window))))
     (setf (window-lines window) lines)))
 
 (defun initialize-window-dimensions (window)
@@ -111,20 +94,10 @@
 (defun refresh (&optional (window *window*))
   (%refresh window))
 
-(defmacro iterate-window-lines (window (content index) &body body)
-  `(loop for line across (window-lines ,window)
-         for ,content = (window-line-content line)
-         for ,index from 0
-         do (progn ,@body)))
-
 (defgeneric %refresh (window))
 
 (defmethod %refresh ((window curses-window))
-  (iterate-window-lines window (content index)
-    (write-string-at-point *curses-window* (padding-string content (window-width window)) 0 index))
   (move-cursor *curses-window* (window-x window) (window-y window))
   (refresh-window *curses-window*))
 
-(defmethod %refresh ((window debug-window))
-  (iterate-window-lines window (content index)
-    (print (padding-string content (window-width window)))))
+(defmethod %refresh ((window debug-window)))
