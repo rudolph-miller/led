@@ -42,7 +42,8 @@
 ;; window-line
 
 (defstruct window-line
-  (content ""))
+  (content "")
+  (length))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -120,10 +121,10 @@
 
 (defmethod %refresh ((window curses-window))
   (iterate-window-lines window (content index)
-    (write-string-at-point *curses-window* content 0 index))
+    (write-string-at-point *curses-window* (padding-string content (window-width window)) 0 index))
   (move-cursor *curses-window* (window-x window) (window-y window))
   (refresh-window *curses-window*))
 
 (defmethod %refresh ((window debug-window))
   (iterate-window-lines window (content index)
-    (print content)))
+    (print (padding-string content (window-width window)))))
