@@ -13,8 +13,11 @@
                 :window-dimensions
                 :write-char-at-point
                 :move-cursor
-                :refresh-window)
+                :refresh-window
+                :clear-window
+                :finalize)
   (:import-from :led.character
+                :make-ichar
                 :ichar-val
                 :ichar-attr)
   (:import-from :led.line
@@ -81,47 +84,41 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; macros
+;; erase
 
-(defmacro with-curses-window (options &body body)
-  (declare (ignore options))
-  `(unwind-protect
-        (let ((*window* (make-instance 'curses-window)))
-          ,@body)
-     (finalize)))
+(defgeneric erase-window (window))
 
+(defmethod erase-window ((window curses-window))
+  (clear-window (window-entity window)))
 
-(defmacro with-debug-window (options &body body)
-  (let ((width (getf options :width 50))
-        (height (getf options :height 20)))
-    `(let ((*window* (make-instance 'debug-window :width ,width :height ,height)))
-       ,@body)))
+(defmethod erase-window ((window debug-window))
+  (declare (ignore window)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; write
 
-(defgeneric window-write-ichar (ichar window x y))
+(defgeneric window-write-ichar (window ichar x y))
 
-(defmethod window-write-ichar (ichar (window curses-window) x y)
+(defmethod window-write-ichar ((window curses-window) ichar x y)
   (if (ichar-attr ichar)
       (progn (wattron (window-entity window) (ichar-attr ichar))
              (write-char-at-point (window-entity window) (ichar-val ichar) x y)
              (wattroff (window-entity window) (ichar-attr ichar)))
       (write-char-at-point (window-entity window) (ichar-val ichar) x y)))
 
-(defmethod window-write-ichar (ichar (window debug-window) x y)
+(defmethod window-write-ichar ((window debug-window) ichar x y)
   (setf (aref (window-entity window) x y) (ichar-val ichar)))
 
-(defun window-write-line (line window y)
+(defun window-write-line (window line y)
   (loop for ichar across (line-chars line)
         for index from 0
-        do (window-write-ichar ichar window index y)))
+        do (window-write-ichar window ichar index y)))
 
 (defun window-write-lines (window)
   (loop for line across (window-lines window)
         for index from 0
-        do (window-write-line line window index)))
+        do (window-write-line window line index)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -167,6 +164,32 @@
 ;; redraw
 
 (defun redraw (&optional (window *window*))
+  (erase-window window)
   (window-write-lines window)
   (update-cursor window)
   (refresh window))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; macros
+
+(defmacro with-curses-window (options &body body)
+  (declare (ignore options))
+  `(unwind-protect
+        (let ((*window* (make-instance 'curses-window)))
+          ,@body)
+     (finalize)))
+
+
+(defmacro with-debug-window (options &body body)
+  (let ((width (getf options :width 50))
+        (height (getf options :height 20)))
+    `(let ((*window* (make-instance 'debug-window :width ,width :height ,height)))
+       ,@body)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; util
+
+(defun set-window-line (line y &optional (window *window*))
+  (setf (aref (window-lines window) y) line))
