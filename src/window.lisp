@@ -16,6 +16,8 @@
                 :refresh-window
                 :clear-window
                 :finalize)
+  (:import-from :led.util
+                :make-vector-with)
   (:import-from :led.character
                 :make-ichar
                 :ichar-val
@@ -23,7 +25,9 @@
   (:import-from :led.line
                 :*max-line-width*
                 :make-line
-                :line-chars))
+                :line-chars)
+  (:export :get-window-line
+           :set-window-line))
 (in-package :led.window)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -56,9 +60,7 @@
 
 (defun initialize-window-lines (window)
   (setq *max-line-width* (window-width window))
-  (let ((lines (loop repeat (window-height window)
-                     collecting (make-line) into result
-                     finally (return (apply #'vector result)))))
+  (let ((lines (make-vector-with (window-height window) #'make-line)))
     (setf (window-lines window) lines)))
 
 (defun initialize-window-dimensions (window)
@@ -190,6 +192,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; util
+
+(defun get-window-line (y &optional (window *window*))
+  (aref (window-lines window) y))
 
 (defun set-window-line (line y &optional (window *window*))
   (setf (aref (window-lines window) y) line))

@@ -18,11 +18,13 @@
   :components ((:module "src"
                 :serial t
                 :components
-                ((:file "attribute")
+                ((:file "util")
+                 (:file "attribute")
                  (:file "character")
                  (:file "line")
                  (:file "string")
                  (:file "window")
+                 (:file "buffer")
                  (:file "file")
                  (:file "led"))))
   :description "[WIP] LED."
