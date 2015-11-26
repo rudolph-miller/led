@@ -182,8 +182,8 @@
 
 
 (defmacro with-debug-window (options &body body)
-  (let ((width (getf options :width 50))
-        (height (getf options :height 20)))
+  (let ((width (getf options :width 100))
+        (height (getf options :height 30)))
     `(let ((*window* (make-instance 'debug-window :width ,width :height ,height)))
        ,@body)))
 
