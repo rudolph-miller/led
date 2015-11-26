@@ -23,6 +23,7 @@
                  (:file "line")
                  (:file "string")
                  (:file "window")
+                 (:file "file")
                  (:file "led"))))
   :description "[WIP] LED."
   :long-description

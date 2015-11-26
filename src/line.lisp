@@ -4,7 +4,8 @@
   (:import-from :led.character
                 :character-to-ichar)
   (:export :*max-line-width*
-           :make-line))
+           :make-line
+           :string-to-line))
 (in-package :led.line)
 
 (defparameter *max-line-width* nil)
