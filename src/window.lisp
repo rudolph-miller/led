@@ -30,10 +30,12 @@
            :set-window-line))
 (in-package :led.window)
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; global parameters
 
 (defparameter *window* nil)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; window
@@ -139,14 +141,12 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; macros
+;; close
 
-(defmacro with-curses-window (options &body body)
-  (declare (ignore options))
-  `(unwind-protect
-        (let ((*window* (make-instance 'curses-window)))
-          ,@body)
-     (finalize)))
+(defun close-window ()
+  (finalize)
+  (setq *window* nil))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; util
