@@ -69,7 +69,10 @@
 
 (defun buffer-visible-lines (buffer)
   (let ((top-row (buffer-top-row buffer)))
-    (subseq (buffer-lines buffer) top-row (min (length (buffer-lines buffer)) (+ top-row (buffer-height buffer))))))
+    (subseq (buffer-lines buffer)
+            top-row
+            (min (length (buffer-lines buffer))
+                 (+ top-row (buffer-height buffer))))))
 
 ;; FIXME: Support multi buffers (like split window)
 ;; (defun migrate-buffers ())
@@ -87,3 +90,23 @@
           for win-line = (get-window-line win-row)
           do (set-window-line (migrate-line-to-line line win-line win-col)
                               win-row))))
+
+(defun move-buffer-lines-up (buffer)
+  (when (> (buffer-top-row buffer) 0)
+    (decf (buffer-top-row buffer))))
+
+(defun move-buffer-lines-down (buffer)
+  (when (< (buffer-top-row buffer)
+           (- (length (buffer-lines buffer))
+              (buffer-height buffer)))
+    (incf (buffer-top-row buffer))))
+
+(defun move-buffer-cursor-up (buffer)
+  (when (> (buffer-y buffer) 0)
+    (decf (buffer-y buffer))))
+
+(defun move-buffer-cursor-down (buffer)
+  (when (< (buffer-y buffer)
+           (1- (min (length (buffer-lines buffer))
+                    (buffer-height buffer))))
+    (incf (buffer-y buffer))))
