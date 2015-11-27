@@ -164,3 +164,11 @@
 (defun move-buffer-cursor-left (buffer)
   (when (> (buffer-x buffer) 0)
     (decf (buffer-x buffer))))
+
+(defun move-buffer-cursor-or-lines-down (buffer)
+  (unless (move-buffer-cursor-down buffer)
+    (move-buffer-lines-down buffer)))
+
+(defun move-buffer-cursor-or-lines-up (buffer)
+  (unless (move-buffer-cursor-up buffer)
+    (move-buffer-lines-up buffer)))
