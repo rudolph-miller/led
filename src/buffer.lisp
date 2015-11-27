@@ -111,3 +111,11 @@
            (1- (min (length (buffer-lines buffer))
                     (buffer-height buffer))))
     (incf (buffer-y buffer))))
+
+(defun move-buffer-cursor-right (buffer)
+  (when (< (buffer-x buffer) (1- (buffer-width buffer)))
+    (incf (buffer-x buffer))))
+
+(defun move-buffer-cursor-left (buffer)
+  (when (> (buffer-x buffer) 0)
+    (decf (buffer-x buffer))))
