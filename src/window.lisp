@@ -100,14 +100,25 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; write
 
+(defmacro ignore-right-bottom-error (window x y &body body)
+  `(if (and (= ,x (1- (window-width ,window)))
+            (= ,y (1- (window-height ,window))))
+       (handler-case
+           (progn ,@body)
+         (error (e)
+           (unless (equal (princ-to-string e) "Error in curses call.")
+             (error e))))
+       (progn ,@body)))
+
 (defgeneric window-write-ichar (window ichar x y))
 
 (defmethod window-write-ichar ((window curses-window) ichar x y)
-  (if (ichar-attr ichar)
-      (progn (wattron (window-entity window) (ichar-attr ichar))
-             (write-char-at-point (window-entity window) (ichar-val ichar) x y)
-             (wattroff (window-entity window) (ichar-attr ichar)))
-      (write-char-at-point (window-entity window) (ichar-val ichar) x y)))
+  (ignore-right-bottom-error window x y
+    (if (ichar-attr ichar)
+        (progn (wattron (window-entity window) (ichar-attr ichar))
+               (write-char-at-point (window-entity window) (ichar-val ichar) x y)
+               (wattroff (window-entity window) (ichar-attr ichar)))
+        (write-char-at-point (window-entity window) (ichar-val ichar) x y))))
 
 (defmethod window-write-ichar ((window debug-window) ichar x y)
   (setf (aref (window-entity window) x y) (ichar-val ichar)))
