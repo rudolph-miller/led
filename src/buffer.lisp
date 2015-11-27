@@ -86,9 +86,10 @@
       (setf (window-y window) y))
     (loop for line across lines
           for win-row from (buffer-position-y buffer)
-          with win-col = (buffer-position-x buffer)
+          with win-col-start = (buffer-position-x buffer)
+          with win-col-end = (+ win-col-start (buffer-width buffer))
           for win-line = (get-window-line win-row)
-          do (set-window-line (migrate-line-to-line line win-line win-col)
+          do (set-window-line (migrate-line-to-line line win-line win-col-start win-col-end)
                               win-row))))
 
 (defun move-buffer-lines-up (buffer)
