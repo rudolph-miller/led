@@ -2,7 +2,8 @@
 (defpackage led.file
   (:use :cl)
   (:import-from :led.string
-                :string-to-lines)
+                :string-to-lines
+                :lines-to-string)
   (:import-from :led.buffer
                 :buffer
                 :buffer-name
@@ -10,7 +11,17 @@
 (in-package :led.file)
 
 (defun read-file-to-lines (path)
-  (string-to-lines (uiop:read-file-string path)))
+  (if (uiop:file-exists-p path)
+      (string-to-lines (uiop:read-file-string path))
+      #()))
+
+(defun write-lines-to-file (buffer)
+  (check-type buffer file-buffer)
+  (with-open-file (stream (file-buffer-path buffer)
+                          :direction :output
+                          :if-exists :supersede
+                          :if-does-not-exist :create)
+    (write-string (lines-to-string (buffer-lines buffer)) stream)))
 
 (defclass file-buffer (buffer)
   ((path :accessor file-buffer-path
