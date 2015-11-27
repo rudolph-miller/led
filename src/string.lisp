@@ -16,7 +16,7 @@
         for fold-p = (and *max-line-width* (> (- (length string) pos) (1- *max-line-width*)))
         for content = (if fold-p
                           (let ((end (+ pos (- *max-line-width* 1))))
-                            (prog1 (concatenate 'string (subseq string pos end) (list #\\))
+                            (prog1 (subseq string pos end)
                               (setq pos end)))
                           (subseq string pos))
         collecting content

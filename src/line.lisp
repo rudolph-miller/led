@@ -10,6 +10,7 @@
            :line-chars
            :line-eol-p
            :string-to-line
+           :append-ichar-to-line
            :migrate-line-to-line))
 (in-package :led.line)
 
@@ -28,6 +29,16 @@
                      collecting (character-to-ichar character) into result
                      finally (return (apply #'vector result)))))
     (make-line chars)))
+
+(defun append-ichar-to-line (line ichar)
+  (let* ((chars (line-chars line))
+         (result-chars (make-array (1+ (length chars))))
+         (result (make-line)))
+    (setq result-chars (replace result-chars chars))
+    (setf (aref result-chars (length chars)) ichar)
+    (setf (line-chars result) result-chars)
+    (setf (line-eol-p result) (line-eol-p line))
+    result))
 
 (defun migrate-line-to-line (line target start end)
   (flet ((make-empty-ichar-vector (len)

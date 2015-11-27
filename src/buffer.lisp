@@ -3,8 +3,12 @@
   (:use :cl)
   (:import-from :led.util
                 :make-vector-with)
+  (:import-from :led.character
+                :character-to-ichar)
   (:import-from :led.line
                 :make-line
+                :line-eol-p
+                :append-ichar-to-line
                 :migrate-line-to-line)
   (:import-from :led.window
                 :*window*
@@ -89,6 +93,8 @@
           with win-col-start = (buffer-position-x buffer)
           with win-col-end = (+ win-col-start (buffer-width buffer))
           for win-line = (get-window-line win-row)
+          unless (line-eol-p line)
+            do (setq line (append-ichar-to-line line (character-to-ichar #\\)))
           do (set-window-line (migrate-line-to-line line win-line win-col-start win-col-end)
                               win-row))))
 
