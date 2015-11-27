@@ -6,10 +6,14 @@
   (:import-from :led.character
                 :character-to-ichar)
   (:import-from :led.line
+                :*max-line-width*
                 :make-line
                 :line-eol-p
                 :append-ichar-to-line
                 :migrate-line-to-line)
+  (:import-from :led.string
+                :string-to-lines
+                :lines-to-string)
   (:import-from :led.window
                 :*window*
                 :window-width
@@ -24,9 +28,17 @@
            :migrate-buffer))
 (in-package :led.buffer)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; globals
+
 (defparameter *current-buffer* nil)
 
 (defparameter *buffers* nil)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; buffer
 
 (defclass buffer ()
   ((name :accessor buffer-name
@@ -53,6 +65,10 @@
    (lines :accessor buffer-lines
           :initarg :lines)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; initialize hooks
+
 (defmethod initialize-instance :before ((buffer buffer) &rest initargs)
   (declare (ignore buffer initargs))
   (assert *window*))
@@ -60,6 +76,10 @@
 (defmethod initialize-instance :after ((buffer buffer) &rest initargs)
   (declare (ignore initargs))
   (push-buffer buffer))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; *buffers* operations
 
 (defun push-buffer (buffer)
   (push buffer *buffers*))
@@ -78,6 +98,22 @@
             (min (length (buffer-lines buffer))
                  (+ top-row (buffer-height buffer))))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; buffer-content
+
+(defun set-buffer-content (buffer string)
+  (let ((*max-line-width* (1- (buffer-width buffer))))
+    (setf (buffer-lines buffer)
+          (string-to-lines string))))
+
+(defun get-buffer-content (buffer)
+  (lines-to-string (buffer-lines buffer)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; migarte
+
 ;; FIXME: Support multi buffers (like split window)
 ;; (defun migrate-buffers ())
 
@@ -85,9 +121,8 @@
   (let ((x (+ (buffer-position-x buffer) (buffer-x buffer)))
         (y (+ (buffer-position-y buffer) (buffer-y buffer)))
         (lines (buffer-visible-lines buffer)))
-    (when (eq buffer *current-buffer*)
-      (setf (window-x window) x)
-      (setf (window-y window) y))
+    (setf (window-x window) x)
+    (setf (window-y window) y)
     (loop for line across lines
           for win-row from (buffer-position-y buffer)
           with win-col-start = (buffer-position-x buffer)
@@ -97,6 +132,10 @@
             do (setq line (append-ichar-to-line line (character-to-ichar #\\)))
           do (set-window-line (migrate-line-to-line line win-line win-col-start win-col-end)
                               win-row))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; buffer controllers
 
 (defun move-buffer-lines-up (buffer)
   (when (> (buffer-top-row buffer) 0)

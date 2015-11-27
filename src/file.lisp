@@ -1,13 +1,12 @@
 (in-package :cl-user)
 (defpackage led.file
   (:use :cl)
-  (:import-from :led.string
-                :string-to-lines
-                :lines-to-string)
   (:import-from :led.buffer
                 :buffer
                 :buffer-name
-                :buffer-lines))
+                :buffer-lines
+                :set-buffer-content
+                :get-buffer-content))
 (in-package :led.file)
 
 (defun read-file-to-lines (path)
@@ -21,7 +20,7 @@
                           :direction :output
                           :if-exists :supersede
                           :if-does-not-exist :create)
-    (write-string (lines-to-string (buffer-lines buffer)) stream)))
+    (write-string (get-buffer-content buffer) stream)))
 
 (defclass file-buffer (buffer)
   ((path :accessor file-buffer-path
@@ -29,5 +28,9 @@
 
 (defmethod initialize-instance :after ((buffer file-buffer) &rest initargs)
   (declare (ignore initargs))
-  (setf (buffer-name buffer) (format nil "FILE: ~a" (file-buffer-path buffer)))
-  (setf (buffer-lines buffer) (read-file-to-lines (file-buffer-path buffer))))
+  (let ((path (file-buffer-path buffer)))
+    (set-buffer-content buffer (if (uiop:file-exists-p path)
+                                   (uiop:read-file-string path)
+                                   #()))
+    (setf (buffer-name buffer)
+          (format nil "FILE: ~a" path))))
