@@ -7,6 +7,8 @@
                 :character-to-ichar)
   (:export :*max-line-width*
            :make-line
+           :line-chars
+           :line-eol-p
            :string-to-line
            :migrate-line-to-line))
 (in-package :led.line)
@@ -14,7 +16,8 @@
 (defparameter *max-line-width* nil)
 
 (defstruct (line (:constructor %make-line))
-  (chars #() :type array))
+  (chars #() :type array)
+  (eol-p nil :type boolean))
 
 (defun make-line (&optional (chars #()))
   (when *max-line-width* (assert (<= (length chars) *max-line-width*)))

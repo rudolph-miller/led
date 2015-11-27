@@ -10,7 +10,7 @@
 (in-package :led.file)
 
 (defun read-file-to-lines (path)
-  (apply #'vector (string-to-lines (uiop:read-file-string path))))
+  (string-to-lines (uiop:read-file-string path)))
 
 (defclass file-buffer (buffer)
   ((path :accessor file-buffer-path
