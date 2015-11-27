@@ -8,8 +8,14 @@
                 :line-chars
                 :line-eol-p
                 :string-to-line)
-  (:export :string-to-lines))
+  (:export :string-to-lines
+           :lines-to-string
+           :lines-string-pos-ichar))
 (in-package :led.string)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; string-to-lines
 
 (defun fold-string (string)
   (loop with pos = 0
@@ -34,6 +40,10 @@
         nconc lines into result
         finally (return (apply #'vector result))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; lines-to-string
+
 (defun line-length (line)
   (let ((chars-len (length (line-chars line))))
     (if (line-eol-p line)
@@ -54,3 +64,25 @@
                            (setf (elt result pos) #\NewLine)
                            (incf pos)))
         finally (return result)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; lines-string-pos-ichar
+
+(defun line-string-pos-ichar (x lines)
+  (loop for line across lines
+        do (cond
+             ((< x (length (line-chars line)))
+              (return (aref (line-chars line) x)))
+             (t
+              (decf x (length (line-chars line)))))
+        finally (return nil)))
+
+(defun lines-string-pos-ichar (x y lines)
+  (loop for line across lines
+        for index from 0
+        when (= y 0)
+          do (return (line-string-pos-ichar x (subseq lines index)))
+        when (line-eol-p line)
+          do (decf y)
+        finally (return nil)))
