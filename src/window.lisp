@@ -38,25 +38,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; window
 
-(defclass window ()
-  ((width :accessor window-width
-          :initarg :width)
-   (height :accessor window-height
-           :initarg :height)
-   (x :accessor window-x
-      :initform 0)
-   (y :accessor window-y
-      :initform 0)
-   (lines :accessor window-lines
-          :type vector)
-   (entity :accessor window-entity)))
-
-(defclass curses-window (window) ())
-(defclass debug-window (window) ())
+(defstruct (window (:constructor %make-window))
+  width
+  height
+  (x 0)
+  (y 0)
+  (lines #() :type array)
+  entity)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; initialize functions
+;; make-window
 
 (defun initialize-window-lines (window)
   (setq *max-line-width* (window-width window))
@@ -64,37 +56,30 @@
     (setf (window-lines window) lines)))
 
 (defun initialize-window-dimensions (window)
-  (assert (typep window 'curses-window))
+  (check-type window window)
   (multiple-value-bind (width height) (window-dimensions (window-entity window))
     (setf (window-width window) width
           (window-height window) height)))
 
-(defmethod initialize-instance :after ((window debug-window) &rest initargs)
-  (declare (ignore initargs))
-  (initialize-window-lines window)
-  (setf (window-entity window) (make-array (list (window-width window) (window-height window)) :initial-element nil)))
-
-(defmethod initialize-instance :after ((window curses-window) &rest initargs)
-  (declare (ignore initargs))
-  (initialize)
-  (setf (window-entity window) (standard-window))
-  (disable-echoing)
-  (enable-raw-input :interpret-control-characters t)
-  (enable-non-blocking-mode (window-entity window))
-  (initialize-window-dimensions window)
-  (initialize-window-lines window))
+(defun make-window ()
+  (if *window*
+      *window*
+      (let ((window (%make-window)))
+        (initialize)
+        (setf (window-entity window) (standard-window))
+        (disable-echoing)
+        (enable-raw-input :interpret-control-characters t)
+        (enable-non-blocking-mode (window-entity window))
+        (initialize-window-dimensions window)
+        (initialize-window-lines window)
+        (setq *window* window))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; erase
 
-(defgeneric erase-window (window))
-
-(defmethod erase-window ((window curses-window))
+(defun erase-window (window)
   (clear-window (window-entity window)))
-
-(defmethod erase-window ((window debug-window))
-  (declare (ignore window)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -110,18 +95,13 @@
              (error e))))
        (progn ,@body)))
 
-(defgeneric window-write-ichar (window ichar x y))
-
-(defmethod window-write-ichar ((window curses-window) ichar x y)
+(defun window-write-ichar (window ichar x y)
   (ignore-right-bottom-error window x y
     (if (ichar-attr ichar)
         (progn (wattron (window-entity window) (ichar-attr ichar))
                (write-char-at-point (window-entity window) (ichar-val ichar) x y)
                (wattroff (window-entity window) (ichar-attr ichar)))
         (write-char-at-point (window-entity window) (ichar-val ichar) x y))))
-
-(defmethod window-write-ichar ((window debug-window) ichar x y)
-  (setf (aref (window-entity window) x y) (ichar-val ichar)))
 
 (defun window-write-line (window line y)
   (loop for ichar across (line-chars line)
@@ -137,40 +117,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; update
 
-(defgeneric update-cursor (window))
-
-(defmethod update-cursor ((window curses-window))
+(defun update-cursor (window)
   (move-cursor (window-entity window) (window-x window) (window-y window)))
-
-
-(defmethod update-cursor ((window debug-window))
-  (setf (aref (window-entity window) (window-x window) (window-y window)) #\*))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; refresh
 
-(defgeneric refresh (window))
-
-(defmethod refresh ((window curses-window))
+(defun refresh (window)
   (refresh-window (window-entity window)))
-
-(defmethod refresh ((window debug-window))
-  (flet ((write-width-line ()
-           (format t (format nil "~~~a{-~~}~~%" (+ (window-width window) 2)) :dummy)))
-    (loop with entity = (window-entity window)
-          for y from 0 below (array-dimension entity 1)
-            initially (write-width-line)
-          do (loop for x from 0 below (array-dimension entity 0)
-                   for char = (aref entity x y)
-                     initially (write-char #\|)
-                   if char
-                     do (write-char char)
-                   else
-                     do (write-char #\Space)
-                   finally (progn (write-char #\|)
-                                  (fresh-line)))
-          finally (write-width-line))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -192,14 +147,6 @@
         (let ((*window* (make-instance 'curses-window)))
           ,@body)
      (finalize)))
-
-
-(defmacro with-debug-window (options &body body)
-  (let ((width (getf options :width 100))
-        (height (getf options :height 30)))
-    `(let ((*window* (make-instance 'debug-window :width ,width :height ,height)))
-       ,@body)))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; util
