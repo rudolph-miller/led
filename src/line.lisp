@@ -9,6 +9,7 @@
            :make-line
            :line-chars
            :line-eol-p
+           :line-length
            :string-to-line
            :append-ichar-to-line
            :migrate-line-to-line))
@@ -19,6 +20,9 @@
 (defstruct (line (:constructor %make-line))
   (chars #() :type array)
   (eol-p nil :type boolean))
+
+(defun line-length (line)
+  (length (line-chars line)))
 
 (defun make-line (&optional (chars #()))
   (when *max-line-width* (assert (<= (length chars) *max-line-width*)))

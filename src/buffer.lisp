@@ -9,6 +9,7 @@
                 :*max-line-width*
                 :make-line
                 :line-eol-p
+                :line-length
                 :append-ichar-to-line
                 :migrate-line-to-line)
   (:import-from :led.string
@@ -158,8 +159,12 @@
     (incf (buffer-y buffer))))
 
 (defun move-buffer-cursor-right (buffer)
-  (when (< (buffer-x buffer) (1- (buffer-width buffer)))
-    (incf (buffer-x buffer))))
+  (let* ((y (buffer-y buffer))
+         (lines (buffer-lines buffer))
+         (current-line (aref lines y)))
+    (when (< (buffer-x buffer)
+             (1- (line-length current-line)))
+      (incf (buffer-x buffer)))))
 
 (defun move-buffer-cursor-left (buffer)
   (when (> (buffer-x buffer) 0)
