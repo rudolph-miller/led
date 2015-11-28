@@ -13,7 +13,9 @@
            :string-to-line
            :append-ichar-to-line
            :migrate-line-to-line
-           :line-chars-with-padding))
+           :line-chars-with-padding
+           :insert-icha
+           :insert-and-pop-last-ichar))
 (in-package :led.line)
 
 (defparameter *max-line-width* nil)
@@ -66,3 +68,21 @@
         for i from 0
         do (setf (aref result i) ichar)
            finally (return result)))
+
+(defun insert-ichar (ichar line x)
+  (let* ((chars (line-chars line))
+        (result-chars (make-array (1+ (length chars)))))
+    (setf (subseq result-chars 0 x) (subseq chars 0 x))
+    (setf (aref result-chars x) ichar)
+    (setf (subseq result-chars (1+ x)) (subseq chars x))
+    (setf (line-chars line) result-chars)))
+
+(defun insert-and-pop-last-ichar (ichar line x)
+  (let* ((chars (line-chars line))
+         (last-ichar (aref chars (1- (length chars))))
+         (result-chars (make-array (length chars))))
+    (setf (subseq result-chars 0 x) (subseq chars 0 x))
+    (setf (aref result-chars x) ichar)
+    (setf (subseq result-chars (1+ x)) (subseq chars x (1- (length chars))))
+    (setf (line-chars line) result-chars)
+    last-ichar))
