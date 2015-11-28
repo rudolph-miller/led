@@ -10,7 +10,6 @@
                 :make-line
                 :line-eol-p
                 :line-length
-                :append-ichar-to-line
                 :migrate-line-to-line
                 :line-chars-with-padding)
   (:import-from :led.string
@@ -114,14 +113,22 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; *max-line-width*
+
+(defmacro with-buffer-max-line-width (buffer &body body)
+  `(let ((*max-line-width* (1- (buffer-width ,buffer))))
+     (progn ,@body)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer-content
 
-(defun set-buffer-content (buffer string)
-  (let ((*max-line-width* (1- (buffer-width buffer))))
+(defun set-buffer-content (string &optional (buffer *current-buffer*))
+  (with-buffer-max-line-width buffer
     (setf (buffer-lines buffer)
           (string-to-lines string))))
 
-(defun get-buffer-content (buffer)
+(defun buffer-content (&optional (buffer *current-buffer*))
   (lines-to-string (buffer-lines buffer)))
 
 
@@ -133,17 +140,18 @@
         (insert-new-line-to-lines y (buffer-lines buffer))))
 
 (defun insert-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
-  (setf (buffer-lines buffer)
-        (insert-ichar-to-lines ichar x y (buffer-lines buffer))))
+  (with-buffer-max-line-width buffer
+    (setf (buffer-lines buffer)
+          (insert-ichar-to-lines ichar x y (buffer-lines buffer)))))
 
 (defun insert-new-line (&optional (buffer *current-buffer*))
-  (insert-new-line-at-point (buffer-y buffer) buffer))
+  (let ((y (+ (buffer-top-row buffer) (buffer-y buffer))))
+    (insert-new-line-at-point y buffer)))
 
 (defun insert-ichar (ichar &optional (buffer *current-buffer*))
-  (insert-ichar-at-point ichar
-                         (buffer-x buffer)
-                         (buffer-y buffer)
-                         buffer))
+  (let ((x (buffer-x buffer))
+        (y (+ (buffer-top-row buffer) (buffer-y buffer))))
+    (insert-ichar-at-point ichar x y buffer)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -176,14 +184,14 @@
 ;; buffer controllers
 
 (defun prev-line (&optional (buffer *current-buffer*))
+  (when (> (buffer-top-row buffer) 0)
+    (decf (buffer-top-row buffer))))
+
+(defun next-line (&optional (buffer *current-buffer*))
   (when (< (buffer-top-row buffer)
            (- (length (buffer-lines buffer))
               (buffer-height buffer)))
     (incf (buffer-top-row buffer))))
-
-(defun next-line (&optional (buffer *current-buffer*))
-  (when (> (buffer-top-row buffer) 0)
-    (decf (buffer-top-row buffer))))
 
 (defun cursor-up (&optional (buffer *current-buffer*))
   (if (> (buffer-y buffer) 0)
@@ -192,8 +200,8 @@
 
 (defun cursor-down (&optional (buffer *current-buffer*))
   (if (< (buffer-y buffer)
-           (1- (min (length (buffer-lines buffer))
-                    (buffer-height buffer))))
+         (1- (min (length (buffer-lines buffer))
+                  (buffer-height buffer))))
       (incf (buffer-y buffer))
       (next-line buffer)))
 

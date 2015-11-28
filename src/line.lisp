@@ -11,11 +11,11 @@
            :line-eol-p
            :line-length
            :string-to-line
-           :append-ichar-to-line
            :migrate-line-to-line
            :line-chars-with-padding
-           :insert-ichar
-           :insert-and-pop-last-ichar))
+           :insert-ichar-to-line
+           :insert-and-pop-last-ichar-to-line
+           :append-ichar-to-line))
 (in-package :led.line)
 
 (defparameter *max-line-width* nil)
@@ -27,25 +27,15 @@
 (defun line-length (line)
   (length (line-chars line)))
 
-(defun make-line (&optional (chars #()))
+(defun make-line (&key (chars #()) (eol-p nil))
   (when *max-line-width* (assert (<= (length chars) *max-line-width*)))
-  (%make-line :chars chars))
+  (%make-line :chars chars :eol-p eol-p))
 
 (defun string-to-line (string)
   (let ((chars (loop for character across string
                      collecting (character-to-ichar character) into result
                      finally (return (apply #'vector result)))))
-    (make-line chars)))
-
-(defun append-ichar-to-line (line ichar)
-  (let* ((chars (line-chars line))
-         (result-chars (make-array (1+ (length chars))))
-         (result (make-line)))
-    (setq result-chars (replace result-chars chars))
-    (setf (aref result-chars (length chars)) ichar)
-    (setf (line-chars result) result-chars)
-    (setf (line-eol-p result) (line-eol-p line))
-    result))
+    (make-line :chars chars)))
 
 (defun migrate-line-to-line (line target start end)
   (flet ((make-empty-ichar-vector (len)
@@ -58,7 +48,7 @@
                                                        (length target-chars)))))
       (setq result-chars (replace result-chars target-chars))
       (setq result-chars (replace result-chars filled-line-chars :start1 start))
-      (make-line result-chars))))
+      (make-line :chars result-chars))))
 
 (defun line-chars-with-padding (line length)
   (assert (<= (line-length line) length))
@@ -69,7 +59,7 @@
         do (setf (aref result i) ichar)
            finally (return result)))
 
-(defun insert-ichar (ichar line x)
+(defun insert-ichar-to-line (ichar x line)
   (let* ((chars (line-chars line))
         (result-chars (make-array (1+ (length chars)))))
     (setf (subseq result-chars 0 x) (subseq chars 0 x))
@@ -77,7 +67,7 @@
     (setf (subseq result-chars (1+ x)) (subseq chars x))
     (setf (line-chars line) result-chars)))
 
-(defun insert-and-pop-last-ichar (ichar line x)
+(defun insert-and-pop-last-ichar-to-line (ichar x line)
   (let* ((chars (line-chars line))
          (last-ichar (aref chars (1- (length chars))))
          (result-chars (make-array (length chars))))
@@ -86,3 +76,10 @@
     (setf (subseq result-chars (1+ x)) (subseq chars x (1- (length chars))))
     (setf (line-chars line) result-chars)
     last-ichar))
+
+(defun append-ichar-to-line (ichar line)
+  (let* ((chars (line-chars line))
+         (result-chars (make-array (1+ (length chars)))))
+    (setq result-chars (replace result-chars chars))
+    (setf (aref result-chars (length chars)) ichar)
+    (make-line :chars result-chars :eol-p (line-eol-p line))))
