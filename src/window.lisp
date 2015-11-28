@@ -17,7 +17,11 @@
                 :clear-window
                 :finalize)
   (:import-from :led.util
-                :make-vector-with)
+                :make-vector-with
+                :loop-board
+                :x
+                :y
+                :it)
   (:import-from :led.character
                 :make-ichar
                 :ichar-val
@@ -54,7 +58,9 @@
 
 (defun initialize-window-lines (window)
   (setq *max-line-width* (window-width window))
-  (let ((lines (make-vector-with (window-height window) #'make-line)))
+  (let ((lines (make-array (list (window-height window)
+                                 (window-width window))
+                           :initial-element nil)))
     (setf (window-lines window) lines)))
 
 (defun initialize-window-dimensions (window)
@@ -105,15 +111,9 @@
                (wattroff (window-entity window) (ichar-attr ichar)))
         (write-char-at-point (window-entity window) (ichar-val ichar) x y))))
 
-(defun window-write-line (window line y)
-  (loop for ichar across (line-chars line)
-        for index from 0
-        do (window-write-ichar window ichar index y)))
-
 (defun window-write-lines (window)
-  (loop for line across (window-lines window)
-        for index from 0
-        do (window-write-line window line index)))
+  (loop-board (window-lines window)
+    (when it (window-write-ichar window it x y))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

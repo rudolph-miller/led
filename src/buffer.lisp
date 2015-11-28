@@ -11,7 +11,8 @@
                 :line-eol-p
                 :line-length
                 :append-ichar-to-line
-                :migrate-line-to-line)
+                :migrate-line-to-line
+                :line-chars-with-padding)
   (:import-from :led.string
                 :string-to-lines
                 :lines-to-string)
@@ -21,8 +22,7 @@
                 :window-height
                 :window-x
                 :window-y
-                :get-window-line
-                :set-window-line)
+                :window-lines)
   (:export :buffer
            :buffer-name
            :buffer-lines
@@ -118,6 +118,13 @@
 ;; FIXME: Support multi buffers (like split window)
 ;; (defun migrate-buffers ())
 
+(defun migrate-buffer-line (line window y start end)
+  (loop with win-lines = (window-lines window)
+        for ichar across (line-chars-with-padding line (- end start))
+        for ichar across chars
+        for x from start
+        do (setf (aref win-lines y x) ichar)))
+
 (defun migrate-buffer (&optional (buffer *current-buffer*) (window *window*))
   (let ((x (+ (buffer-position-x buffer) (buffer-x buffer)))
         (y (+ (buffer-position-y buffer) (buffer-y buffer)))
@@ -125,14 +132,11 @@
     (setf (window-x window) x)
     (setf (window-y window) y)
     (loop for line across lines
+          for y from 0 below (buffer-height buffer)
           for win-row from (buffer-position-y buffer)
           with win-col-start = (buffer-position-x buffer)
           with win-col-end = (+ win-col-start (buffer-width buffer))
-          for win-line = (get-window-line win-row)
-          unless (line-eol-p line)
-            do (setq line (append-ichar-to-line line (character-to-ichar #\\)))
-          do (set-window-line (migrate-line-to-line line win-line win-col-start win-col-end)
-                              win-row))))
+          do (migrate-buffer-line line window win-row win-col-start win-col-end))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

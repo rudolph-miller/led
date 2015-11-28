@@ -12,7 +12,8 @@
            :line-length
            :string-to-line
            :append-ichar-to-line
-           :migrate-line-to-line))
+           :migrate-line-to-line
+           :line-chars-with-padding))
 (in-package :led.line)
 
 (defparameter *max-line-width* nil)
@@ -56,3 +57,12 @@
       (setq result-chars (replace result-chars target-chars))
       (setq result-chars (replace result-chars filled-line-chars :start1 start))
       (make-line result-chars))))
+
+(defun line-chars-with-padding (line length)
+  (assert (<= (line-length line) length))
+  (loop with result = (make-array length :initial-element nil)
+        with chars = (line-chars line)
+        for ichar across chars
+        for i from 0
+        do (setf (aref result i) ichar)
+           finally (return result)))
