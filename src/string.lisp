@@ -44,17 +44,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lines-to-string
 
-(defun line-length (line)
+(defun line-chars-length (line)
   (let ((chars-len (length (line-chars line))))
     (if (line-eol-p line)
         (1+ chars-len)
         chars-len)))
 
-(defun lines-length (lines)
-  (reduce #'+ (loop for line across lines collecting (line-length line))))
+(defun lines-chars-length (lines)
+  (reduce #'+ (loop for line across lines collecting (line-chars-length line))))
 
 (defun lines-to-string (lines)
-  (loop with result = (make-string (lines-length lines))
+  (loop with result = (make-string (lines-chars-length lines))
         with pos = 0
         for line across lines
         do (loop for ichar across (line-chars line)

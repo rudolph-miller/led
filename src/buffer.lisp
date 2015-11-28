@@ -121,7 +121,6 @@
 (defun migrate-buffer-line (line window y start end)
   (loop with win-lines = (window-lines window)
         for ichar across (line-chars-with-padding line (- end start))
-        for ichar across chars
         for x from start
         do (setf (aref win-lines y x) ichar)))
 
