@@ -164,7 +164,9 @@
   (loop with win-lines = (window-lines window)
         for ichar across (line-chars-with-padding line (- end start))
         for x from start
-        do (setf (aref win-lines y x) ichar)))
+        do (setf (aref win-lines y x) ichar)
+        finally (unless (line-eol-p line)
+                  (setf (aref win-lines y x) (character-to-ichar #\\)))))
 
 (defun migrate-buffer (&optional (buffer *current-buffer*) (window *window*))
   (let ((x (+ (buffer-position-x buffer) (buffer-x buffer)))
