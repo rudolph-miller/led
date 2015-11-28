@@ -10,9 +10,7 @@
                 :line-eol-p
                 :line-length
                 :ichars-to-line
-                :string-to-line
-                :insert-ichar-to-line
-                :insert-and-pop-last-ichar-to-line)
+                :string-to-line)
   (:export :string-to-lines
            :ichars-to-lines
            :lines-to-string
@@ -134,21 +132,23 @@
 ;; insert
 
 (defun insert-new-line-to-lines (y lines)
-  (let ((result (make-array (1+ (length lines)))))
-    (setf (subseq result 0 y) (subseq lines 0 y))
-    (setf (aref result y) (make-line :eol-p t))
-    (setf (subseq result (1+ y)) (subseq lines y))
-    result))
+  (concatenate 'vector
+               (subseq lines 0 y)
+               (vector (make-line :eol-p t))
+               (subseq lines y)))
 
 (defun insert-ichar-to-lines (ichar x y lines)
   (let* ((end (loop for index from y
                     for line = (aref lines index)
                     when (line-eol-p line)
-                      do (return index)))
-         (ichars (lines-to-ichars (subseq lines y (1+ end))))
-         (result-ichars (make-array (1+ (length ichars)))))
-    (setf (subseq result-ichars 0 x) (subseq ichars 0 x))
-    (setf (aref result-ichars x) ichar)
-    (setf (subseq result-ichars (1+ x)) (subseq ichars x))
-    (setf (subseq lines y (1+ end)) (ichars-to-lines result-ichars))
-    lines))
+                      do (return (1+ index))))
+         (ichars (lines-to-ichars (subseq lines y end)))
+         (inserted-ichars (concatenate 'vector
+                                       (subseq ichars 0 x)
+                                       (vector ichar)
+                                       (subseq ichars x)))
+         (inserted-lines (ichars-to-lines inserted-ichars)))
+    (concatenate 'vector
+                 (subseq lines 0 y)
+                 inserted-lines
+                 (subseq lines end))))
