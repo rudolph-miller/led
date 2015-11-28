@@ -84,7 +84,7 @@
 (defmethod initialize-instance :before ((buffer buffer) &rest initargs)
   (declare (ignore initargs))
   (assert *window*))
-                                        
+
 (defmethod initialize-instance :after ((buffer buffer) &rest initargs)
   (declare (ignore initargs))
   (push-buffer buffer)
@@ -208,13 +208,35 @@
       (next-line buffer)))
 
 (defun cursor-left (&optional (buffer *current-buffer*))
-  (when (> (buffer-x buffer) 0)
-    (decf (buffer-x buffer))))
+  (let* ((lines (buffer-lines buffer))
+         (y (+ (buffer-top-row buffer)
+               (buffer-y buffer)))
+         (prev-line (and (> y 0)
+                         (aref lines (1- y)))))
+    (cond
+      ((> (buffer-x buffer) 0)
+       (decf (buffer-x buffer))
+       t)
+      ((and prev-line
+            (not (line-eol-p prev-line)))
+       (setf (buffer-x buffer) (1- (line-length prev-line)))
+       (decf (buffer-y buffer))
+       t)
+      (t nil))))
+       
 
 (defun cursor-right (&optional (buffer *current-buffer*))
-  (let* ((y (buffer-y buffer))
-         (lines (buffer-lines buffer))
+  (let* ((lines (buffer-lines buffer))
+         (y (+ (buffer-top-row buffer)
+               (buffer-y buffer)))
          (current-line (aref lines y)))
-    (when (< (buffer-x buffer)
-             (1- (line-length current-line)))
-      (incf (buffer-x buffer)))))
+    (cond
+      ((< (buffer-x buffer)
+           (1- (line-length current-line)))
+       (incf (buffer-x buffer))
+       t)
+      ((not (line-eol-p current-line))
+       (setf (buffer-x buffer) 0)
+       (incf (buffer-y buffer))
+       t)
+      (t nil))))
