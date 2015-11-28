@@ -5,12 +5,18 @@
                 :ichar-val)
   (:import-from :led.line
                 :*max-line-width*
+                :make-line
                 :line-chars
                 :line-eol-p
-                :string-to-line)
+                :line-length
+                :string-to-line
+                :insert-ichar
+                :insert-and-pop-last-ichar)
   (:export :string-to-lines
            :lines-to-string
-           :lines-string-pos-ichar))
+           :lines-string-pos-ichar
+           :insert-new-line-to-lines
+           :insert-ichar-to-lines))
 (in-package :led.string)
 
 
@@ -86,3 +92,34 @@
         when (line-eol-p line)
           do (decf y)
         finally (return nil)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; insert
+
+(defun insert-new-line-to-lines (y lines)
+  (let ((result (make-array (1+ (length lines)))))
+    (setf (subseq result 0 y) (subseq lines 0 y))
+    (setf (aref result y) (make-line))
+    (setf (subseq result (1+ y)) (subseq lines y))
+    result))
+
+(defun insert-ichar-to-lines (ichar x y lines)
+  (let ((line (aref lines y)))
+    (if (< (line-length line)
+           (1- *max-line-width*))
+        (insert-ichar ichar line x)
+        (loop with lines-length = (length lines)
+              for poped = (insert-and-pop-last-ichar ichar line x)
+                then (insert-and-pop-last-ichar poped next-line 0)
+              for y from (1+ y)
+              for next-line = (if (< y lines-length)
+                                  (aref lines y)
+                                  (progn (setq lines (insert-new-line-to-lines
+                                                      lines-length
+                                                      lines))
+                                         (aref lines y)))
+              until (< (line-length next-line)
+                       *max-line-width*)
+              finally (insert-ichar poped next-line 0)))
+    lines))

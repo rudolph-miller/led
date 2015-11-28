@@ -14,7 +14,7 @@
            :append-ichar-to-line
            :migrate-line-to-line
            :line-chars-with-padding
-           :insert-icha
+           :insert-ichar
            :insert-and-pop-last-ichar))
 (in-package :led.line)
 

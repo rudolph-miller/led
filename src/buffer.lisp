@@ -15,7 +15,9 @@
                 :line-chars-with-padding)
   (:import-from :led.string
                 :string-to-lines
-                :lines-to-string)
+                :lines-to-string
+                :insert-new-line-to-lines
+                :insert-ichar-to-lines)
   (:import-from :led.window
                 :*window*
                 :window-width
@@ -26,6 +28,10 @@
   (:export :buffer
            :buffer-name
            :buffer-lines
+           :insert-new-line-at-point
+           :insert-ichar-at-point
+           :insert-new-line
+           :insert-ichar
            :migrate-buffer))
 (in-package :led.buffer)
 
@@ -110,6 +116,27 @@
 
 (defun get-buffer-content (buffer)
   (lines-to-string (buffer-lines buffer)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; insert
+
+(defun insert-new-line-at-point (y &optional (buffer *current-buffer*))
+  (setf (buffer-lines buffer)
+        (insert-new-line-to-lines y (buffer-lines buffer))))
+
+(defun insert-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
+  (setf (buffer-lines buffer)
+        (insert-ichar-to-lines ichar x y (buffer-lines buffer))))
+
+(defun insert-new-line (&optional (buffer *current-buffer*))
+  (insert-new-line-at-point (buffer-y buffer) buffer))
+
+(defun insert-ichar (ichar &optional (buffer *current-buffer*))
+  (insert-ichar-at-point ichar
+                         (buffer-x buffer)
+                         (buffer-y buffer)
+                         buffer))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
