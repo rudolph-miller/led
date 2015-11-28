@@ -9,11 +9,14 @@
                 :line-chars
                 :line-eol-p
                 :line-length
+                :ichars-to-line
                 :string-to-line
                 :insert-ichar-to-line
                 :insert-and-pop-last-ichar-to-line)
   (:export :string-to-lines
+           :ichars-to-lines
            :lines-to-string
+           :lines-to-ichars
            :lines-string-pos-ichar
            :insert-new-line-to-lines
            :insert-ichar-to-lines))
@@ -21,26 +24,43 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; string-to-lines
+;; ichars-to-lines
 
-(defun fold-string (string)
+(defun fold (sequence)
   (loop with pos = 0
+        with seq-len = (length sequence)
         for fold-p = (and *max-line-width*
-                          (> (- (length string) pos)
+                          (> (- seq-len pos)
                              *max-line-width*))
         for content = (if fold-p
                           (let ((end (+ pos *max-line-width*)))
-                            (prog1 (subseq string pos end)
+                            (prog1 (subseq sequence pos end)
                               (setq pos end)))
-                          (subseq string pos))
+                          (subseq sequence pos))
         collecting content
         while fold-p))
+
+(defun ichars-to-lines (ichars)
+  (loop for ichar across ichars
+        unless ichar
+          nconc (let ((lines (mapcar #'ichars-to-line
+                                     (mapcar #'(lambda (folded)
+                                                 (apply #'vector folded))
+                                             (fold tmp)))))
+                  (setf (line-eol-p (car (last lines))) t)
+                  lines) into result
+        collecting ichar into tmp
+        finally (return (apply #'vector result))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; string-to-lines
 
 (defun string-to-lines (string)
   (loop with stream = (make-string-input-stream string)
         for line = (read-line stream nil nil)
         while line
-        for lines = (mapcar #'string-to-line (fold-string line))
+        for lines = (mapcar #'string-to-line (fold line))
         for last-line = (car (last lines))
         do (setf (line-eol-p last-line) t)
         nconc lines into result
@@ -48,7 +68,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; lines-to-string
+;; lines-to-ichars
 
 (defun line-chars-length (line)
   (let ((chars-len (length (line-chars line))))
@@ -58,6 +78,22 @@
 
 (defun lines-chars-length (lines)
   (reduce #'+ (loop for line across lines collecting (line-chars-length line))))
+
+(defun lines-to-ichars (lines)
+  (loop with result = (make-array (lines-chars-length lines))
+        with pos = 0
+        for line across lines
+        do (loop for ichar across (line-chars line)
+                 do (setf (elt result pos) ichar)
+                    (incf pos)
+                 finally (when (line-eol-p line)
+                           (setf (elt result pos) nil)
+                           (incf pos)))
+        finally (return result)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; lines-to-string
 
 (defun lines-to-string (lines)
   (loop with result = (make-string (lines-chars-length lines))
@@ -105,22 +141,13 @@
     result))
 
 (defun insert-ichar-to-lines (ichar x y lines)
-  (let ((line (aref lines y)))
-    (if (< (line-length line)
-           (1- *max-line-width*))
-        (insert-ichar-to-line ichar x line)
-        (loop with lines-length = (length lines)
-              for poped = (insert-and-pop-last-ichar ichar x line)
-                then (insert-and-pop-last-ichar poped 0 next-line)
-              for y from (1+ y)
-              for next-line = (if (< y lines-length)
-                                  (aref lines y)
-                                  (progn (setf (line-eol-p next-line) nil)
-                                         (setq lines (insert-new-line-to-lines
-                                                      lines-length
-                                                      lines))
-                                         (aref lines y)))
-              until (< (line-length next-line)
-                       *max-line-width*)
-              finally (insert-ichar poped 0 next-line)))
-    lines))
+  (let* ((end (loop for index from y
+                    for line = (aref lines index)
+                    when (line-eol-p line)
+                      do (return index)))
+         (ichars (lines-to-ichars (subseq lines y (1+ end))))
+         (result-ichars (make-array (1+ (length ichars)))))
+    (setf (subseq result-ichars 0 x) (subseq ichars 0 x))
+    (setf (aref result-ichars x) ichar)
+    (setf (subseq result-ichars (1+ x)) (subseq ichars x))
+    (ichars-to-lines result-ichars)))

@@ -10,6 +10,7 @@
            :line-chars
            :line-eol-p
            :line-length
+           :ichars-to-line
            :string-to-line
            :migrate-line-to-line
            :line-chars-with-padding
@@ -31,11 +32,14 @@
   (when *max-line-width* (assert (<= (length chars) *max-line-width*)))
   (%make-line :chars chars :eol-p eol-p))
 
+(defun ichars-to-line (ichars)
+  (make-line :chars ichars))
+
 (defun string-to-line (string)
   (let ((chars (loop for character across string
                      collecting (character-to-ichar character) into result
                      finally (return (apply #'vector result)))))
-    (make-line :chars chars)))
+    (ichars-to-line chars)))
 
 (defun migrate-line-to-line (line target start end)
   (flet ((make-empty-ichar-vector (len)
