@@ -150,4 +150,5 @@
     (setf (subseq result-ichars 0 x) (subseq ichars 0 x))
     (setf (aref result-ichars x) ichar)
     (setf (subseq result-ichars (1+ x)) (subseq ichars x))
-    (ichars-to-lines result-ichars)))
+    (setf (subseq lines y (1+ end)) (ichars-to-lines result-ichars))
+    lines))
