@@ -32,7 +32,13 @@
            :insert-ichar-at-point
            :insert-new-line
            :insert-ichar
-           :migrate-buffer))
+           :migrate-buffer
+           :prev-line
+           :next-line
+           :cursor-up
+           :cursor-down
+           :cursor-left
+           :cursor-right))
 (in-package :led.buffer)
 
 
@@ -77,10 +83,11 @@
 ;; initialize hooks
 
 (defmethod initialize-instance :before ((buffer buffer) &rest initargs)
-  (declare (ignore buffer initargs))
+  (declare (ignore initargs))
   (assert *window*))
                                         
 (defmethod initialize-instance :after ((buffer buffer) &rest initargs)
+  (declare (ignore initargs))
   (push-buffer buffer)
   (setq *current-buffer* buffer))
 
@@ -168,42 +175,36 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer controllers
 
-(defun move-buffer-lines-up (&optional (buffer *current-buffer*))
-  (when (> (buffer-top-row buffer) 0)
-    (decf (buffer-top-row buffer))))
-
-(defun move-buffer-lines-down (&optional (buffer *current-buffer*))
+(defun prev-line (&optional (buffer *current-buffer*))
   (when (< (buffer-top-row buffer)
            (- (length (buffer-lines buffer))
               (buffer-height buffer)))
     (incf (buffer-top-row buffer))))
 
-(defun move-buffer-cursor-up (&optional (buffer *current-buffer*))
-  (when (> (buffer-y buffer) 0)
-    (decf (buffer-y buffer))))
+(defun next-line (&optional (buffer *current-buffer*))
+  (when (> (buffer-top-row buffer) 0)
+    (decf (buffer-top-row buffer))))
 
-(defun move-buffer-cursor-down (&optional (buffer *current-buffer*))
-  (when (< (buffer-y buffer)
+(defun cursor-up (&optional (buffer *current-buffer*))
+  (if (> (buffer-y buffer) 0)
+      (decf (buffer-y buffer))
+      (prev-line buffer)))
+
+(defun cursor-down (&optional (buffer *current-buffer*))
+  (if (< (buffer-y buffer)
            (1- (min (length (buffer-lines buffer))
                     (buffer-height buffer))))
-    (incf (buffer-y buffer))))
+      (incf (buffer-y buffer))
+      (next-line buffer)))
 
-(defun move-buffer-cursor-right (&optional (buffer *current-buffer*))
+(defun cursor-left (&optional (buffer *current-buffer*))
+  (when (> (buffer-x buffer) 0)
+    (decf (buffer-x buffer))))
+
+(defun cursor-right (&optional (buffer *current-buffer*))
   (let* ((y (buffer-y buffer))
          (lines (buffer-lines buffer))
          (current-line (aref lines y)))
     (when (< (buffer-x buffer)
              (1- (line-length current-line)))
       (incf (buffer-x buffer)))))
-
-(defun move-buffer-cursor-left (&optional (buffer *current-buffer*))
-  (when (> (buffer-x buffer) 0)
-    (decf (buffer-x buffer))))
-
-(defun move-buffer-cursor-or-lines-down (&optional (buffer *current-buffer*))
-  (unless (move-buffer-cursor-down buffer)
-    (move-buffer-lines-down buffer)))
-
-(defun move-buffer-cursor-or-lines-up (&optional (buffer *current-buffer*))
-  (unless (move-buffer-cursor-up buffer)
-    (move-buffer-lines-up buffer)))
