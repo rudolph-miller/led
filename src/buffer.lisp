@@ -75,8 +75,8 @@
   (assert *window*))
                                         
 (defmethod initialize-instance :after ((buffer buffer) &rest initargs)
-  (declare (ignore initargs))
-  (push-buffer buffer))
+  (push-buffer buffer)
+  (setq *current-buffer* buffer))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -118,7 +118,7 @@
 ;; FIXME: Support multi buffers (like split window)
 ;; (defun migrate-buffers ())
 
-(defun migrate-buffer (buffer &optional (window *window*))
+(defun migrate-buffer (&optional (buffer *current-buffer*) (window *window*))
   (let ((x (+ (buffer-position-x buffer) (buffer-x buffer)))
         (y (+ (buffer-position-y buffer) (buffer-y buffer)))
         (lines (buffer-visible-lines buffer)))
@@ -138,27 +138,27 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer controllers
 
-(defun move-buffer-lines-up (buffer)
+(defun move-buffer-lines-up (&optional (buffer *current-buffer*))
   (when (> (buffer-top-row buffer) 0)
     (decf (buffer-top-row buffer))))
 
-(defun move-buffer-lines-down (buffer)
+(defun move-buffer-lines-down (&optional (buffer *current-buffer*))
   (when (< (buffer-top-row buffer)
            (- (length (buffer-lines buffer))
               (buffer-height buffer)))
     (incf (buffer-top-row buffer))))
 
-(defun move-buffer-cursor-up (buffer)
+(defun move-buffer-cursor-up (&optional (buffer *current-buffer*))
   (when (> (buffer-y buffer) 0)
     (decf (buffer-y buffer))))
 
-(defun move-buffer-cursor-down (buffer)
+(defun move-buffer-cursor-down (&optional (buffer *current-buffer*))
   (when (< (buffer-y buffer)
            (1- (min (length (buffer-lines buffer))
                     (buffer-height buffer))))
     (incf (buffer-y buffer))))
 
-(defun move-buffer-cursor-right (buffer)
+(defun move-buffer-cursor-right (&optional (buffer *current-buffer*))
   (let* ((y (buffer-y buffer))
          (lines (buffer-lines buffer))
          (current-line (aref lines y)))
@@ -166,14 +166,14 @@
              (1- (line-length current-line)))
       (incf (buffer-x buffer)))))
 
-(defun move-buffer-cursor-left (buffer)
+(defun move-buffer-cursor-left (&optional (buffer *current-buffer*))
   (when (> (buffer-x buffer) 0)
     (decf (buffer-x buffer))))
 
-(defun move-buffer-cursor-or-lines-down (buffer)
+(defun move-buffer-cursor-or-lines-down (&optional (buffer *current-buffer*))
   (unless (move-buffer-cursor-down buffer)
     (move-buffer-lines-down buffer)))
 
-(defun move-buffer-cursor-or-lines-up (buffer)
+(defun move-buffer-cursor-or-lines-up (&optional (buffer *current-buffer*))
   (unless (move-buffer-cursor-up buffer)
     (move-buffer-lines-up buffer)))
