@@ -5,10 +5,10 @@
                 :character-to-ichar)
   (:import-from :led.internal.line
                 :make-line
-                :line-chars
+                :line-ichars
                 :line-eol-p
                 :line-length
-                :line-chars-with-padding
+                :line-ichars-with-padding
                 :string-to-line)
   (:import-from :led.internal.string
                 :string-to-lines
@@ -102,7 +102,7 @@
     (loop for line across (buffer-visible-lines buffer)
           for index from 0
           while (< index y)
-          do (loop repeat (length (fold (line-chars line) buffer))
+          do (loop repeat (length (fold (line-ichars line) buffer))
                    for i = index
                      then (progn (when (> y i) (incf y))
                                  (incf index))))
@@ -153,7 +153,9 @@
 
 (defun set-buffer-content (string &optional (buffer *current-buffer*))
   (setf (buffer-lines buffer)
-        (string-to-lines string)))
+        (if string
+            (string-to-lines string)
+            #())))
 
 (defun buffer-content (&optional (buffer *current-buffer*))
   (lines-to-string (buffer-lines buffer)))
@@ -162,21 +164,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; migarte
 
-(defun buffer-migrate-lines (buffer)
+(defun buffer-migrate-lines (buffer length)
   (loop with top-row = (buffer-top-row buffer)
-        with result = (make-array (min (length (buffer-lines buffer))
-                                       (buffer-height buffer)))
+        with result = (make-array length :initial-element (make-line))
         with lines = (buffer-lines buffer)
         for y from top-row below (length (buffer-lines buffer))
         with result-length = (length result)
         for index from 0 below result-length
         for line = (aref lines y)
         collecting line into visible-lines
-        do (loop for ichars in (fold (line-chars line) buffer)
+        do (loop for ichars in (fold (line-ichars line) buffer)
                  for i = index
                    then (incf index)
                  while (< i result-length)
-                 do (setf (aref result i) (make-line :chars ichars))
+                 do (setf (aref result i) (make-line :ichars ichars))
                  finally (when (< i result-length)
                            (setf (line-eol-p (aref result i)) t)))
         finally (setf (buffer-visible-lines buffer) (apply #'vector visible-lines))
@@ -187,7 +188,7 @@
 
 (defun migrate-buffer-line (line window y start end)
   (loop with win-lines = (window-lines window)
-        for ichar across (line-chars-with-padding line (- end start))
+        for ichar across (line-ichars-with-padding line (- end start))
         for x from start
         do (setf (aref win-lines y x) ichar)
         finally (unless (line-eol-p line)
@@ -201,19 +202,22 @@
       line)))
 
 (defun migrate-buffer (&optional (buffer *current-buffer*) (window *window*))
-  (let ((lines (buffer-migrate-lines buffer)))
+  (let* ((name-line (buffer-name-line buffer))
+         (migrate-line-length (if name-line
+                                  (1- (buffer-height buffer))
+                                  (buffer-height buffer)))
+         (lines (buffer-migrate-lines buffer migrate-line-length)))
     (multiple-value-bind (x y) (buffer-window-cursor-position buffer)
-      (loop with name-line = (buffer-name-line buffer)
-            for line across lines
-            repeat (if name-line (1- (buffer-height buffer)) (buffer-height buffer))
+      (loop for line across lines
             for win-row from (buffer-position-y buffer)
             with win-col-start = (buffer-position-x buffer)
             with win-col-end = (+ win-col-start (buffer-width buffer))
             do (migrate-buffer-line line window win-row win-col-start win-col-end)
-            finally
-               (when name-line
-                 (migrate-buffer-line name-line window (1+ win-row)
-                                      win-col-start win-col-end)))
+            finally (when name-line
+                      (migrate-buffer-line name-line
+                                           window
+                                           (1- (buffer-height buffer))
+                                           win-col-start win-col-end)))
       (setf (window-x window) x)
       (setf (window-y window) y))))
 
@@ -317,12 +321,12 @@
 
 (defun insert-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
   (let* ((line (aref (buffer-lines buffer) y))
-         (chars (line-chars line)))
-    (setf (line-chars line)
+         (ichars (line-ichars line)))
+    (setf (line-ichars line)
           (concatenate 'vector
-                       (subseq chars 0 x)
+                       (subseq ichars 0 x)
                        (vector ichar)
-                       (subseq chars x))))
+                       (subseq ichars x))))
   (redraw-buffer)
   t)
 

@@ -4,7 +4,8 @@
   (:import-from :led.internal.character
                 :ichar-val)
   (:import-from :led.internal.line
-                :line-chars
+                :line-length
+                :line-ichars
                 :line-eol-p
                 :line-length
                 :string-to-line)
@@ -27,20 +28,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lines-to-string
 
-(defun line-chars-length (line)
-  (let ((chars-len (length (line-chars line))))
+(defun line-ichars-length (line)
+  (let ((line-length (line-length line)))
     (if (line-eol-p line)
-        (1+ chars-len)
-        chars-len)))
+        (1+ line-length)
+        line-length)))
 
 (defun lines-chars-length (lines)
-  (reduce #'+ (loop for line across lines collecting (line-chars-length line))))
+  (reduce #'+ (loop for line across lines collecting (line-ichars-length line))))
 
 (defun lines-to-string (lines)
   (loop with result = (make-string (lines-chars-length lines))
         with pos = 0
         for line across lines
-        do (loop for ichar across (line-chars line)
+        do (loop for ichar across (line-ichars line)
                  do (setf (elt result pos) (ichar-val ichar))
                     (incf pos)
                  finally (when (line-eol-p line)

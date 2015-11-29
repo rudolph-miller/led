@@ -17,14 +17,11 @@
                 :clear-window
                 :finalize)
   (:import-from :led.internal.character
-                :make-ichar
                 :ichar-val
                 :ichar-attr)
-  (:import-from :led.internal.line
-                :make-line
-                :line-chars)
-  (:export :get-window-line
-           :set-window-line))
+  (:export :make-window
+           :redraw
+           :close-window))
 (in-package :led.window)
 
 
@@ -143,13 +140,3 @@
 (defun close-window ()
   (finalize)
   (setq *window* nil))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; util
-
-(defun get-window-line (y &optional (window *window*))
-  (aref (window-lines window) y))
-
-(defun set-window-line (line y &optional (window *window*))
-  (setf (aref (window-lines window) y) line))

@@ -4,18 +4,18 @@
   (:import-from :led.internal.character
                 :character-to-ichar)
   (:export :make-line
-           :line-chars
+           :line-ichars
            :line-eol-p
            :line-length
            :string-to-line
-           :line-chars-with-padding))
+           :line-ichars-with-padding))
 (in-package :led.internal.line)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; line
 (defstruct line
-  (chars #() :type array)
+  (ichars #() :type array)
   (eol-p nil :type boolean))
 
 
@@ -23,27 +23,27 @@
 ;; line-length
 
 (defun line-length (line)
-  (length (line-chars line)))
+  (length (line-ichars line)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; string-to-line
 
 (defun string-to-line (string &optional (eol-p nil))
-  (let ((chars (loop for character across string
+  (let ((ichars (loop for character across string
                      collecting (character-to-ichar character) into result
                      finally (return (apply #'vector result)))))
-    (make-line :chars chars :eol-p eol-p)))
+    (make-line :ichars ichars :eol-p eol-p)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; line-chars-with-padding
+;; line-ichars-with-padding
 
-(defun line-chars-with-padding (line length)
+(defun line-ichars-with-padding (line length)
   (assert (<= (line-length line) length))
   (loop with result = (make-array length :initial-element nil)
-        with chars = (line-chars line)
-        for ichar across chars
+        with ichars = (line-ichars line)
+        for ichar across ichars
         for i from 0
         do (setf (aref result i) ichar)
            finally (return result)))

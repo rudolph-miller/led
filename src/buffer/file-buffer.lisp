@@ -26,17 +26,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; initialize
 
-(defun read-file-to-lines (path)
-  (if (uiop:file-exists-p path)
-      (string-to-lines (uiop:read-file-string path))
-      #()))
-
 (defmethod initialize-instance :after ((buffer file-buffer) &rest initargs)
   (declare (ignore initargs))
   (let ((path (file-buffer-path buffer)))
-    (set-buffer-content (if (uiop:file-exists-p path)
-                                   (uiop:read-file-string path)
-                                   #())
+    (set-buffer-content (and (uiop:file-exists-p path)
+                             (uiop:read-file-string path))
                         buffer)))
 
 
