@@ -53,10 +53,7 @@
 ;; buffer
 
 (defclass buffer ()
-  ((name :accessor buffer-name
-         :initarg :name
-         :initform "No name buffer")
-   (position-x :accessor buffer-position-x
+  ((position-x :accessor buffer-position-x
                :initarg :position-x
                :initform 0)
    (position-y :accessor buffer-position-y
@@ -77,6 +74,14 @@
    (lines :accessor buffer-lines
           :initarg :lines)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; buffer-name
+
+
+(defgeneric buffer-name (buffer)
+  (:method ((buffer buffer))
+    "No Name Buffer"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; initialize hooks

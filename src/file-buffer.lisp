@@ -37,10 +37,15 @@
     (set-buffer-content (if (uiop:file-exists-p path)
                                    (uiop:read-file-string path)
                                    #())
-                        buffer)
-    (setf (buffer-name buffer)
-          (format nil "FILE: ~a" path))))
+                        buffer)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; buffer-name
+
+(defmethod buffer-name ((buffer file-buffer))
+  (let ((path (file-buffer-path buffer)))
+    (format nil "FILE: ~a" path)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; write-buffer-to-file
