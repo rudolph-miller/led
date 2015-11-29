@@ -168,6 +168,12 @@
         finally (unless (line-eol-p line)
                   (setf (aref win-lines y x) (character-to-ichar #\\)))))
 
+(defun buffer-name-line (buffer)
+  (with-buffer-max-line-width buffer
+    (let* ((name (buffer-name buffer))
+           (lines (string-to-lines name)))
+      (aref lines 0))))
+
 (defun migrate-buffer (&optional (buffer *current-buffer*) (window *window*))
   (let ((x (+ (buffer-position-x buffer) (buffer-x buffer)))
         (y (+ (buffer-position-y buffer) (buffer-y buffer)))
@@ -175,11 +181,16 @@
     (setf (window-x window) x)
     (setf (window-y window) y)
     (loop for line across lines
-          for y from 0 below (buffer-height buffer)
+          for y from 0 below (1- (buffer-height buffer))
           for win-row from (buffer-position-y buffer)
           with win-col-start = (buffer-position-x buffer)
           with win-col-end = (+ win-col-start (buffer-width buffer))
-          do (migrate-buffer-line line window win-row win-col-start win-col-end))))
+          do (migrate-buffer-line line window win-row win-col-start win-col-end)
+          finally (migrate-buffer-line (buffer-name-line buffer)
+                                       window
+                                       (1+ win-row)
+                                       win-col-start
+                                       win-col-end))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -231,7 +242,7 @@
          (current-line (aref lines y)))
     (cond
       ((< (buffer-x buffer)
-           (1- (line-length current-line)))
+          (1- (line-length current-line)))
        (incf (buffer-x buffer))
        t)
       ((not (line-eol-p current-line))
