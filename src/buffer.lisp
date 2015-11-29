@@ -76,12 +76,21 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; buffer-name
+;; buffer-cursor-position
 
+(defun buffer-cursor-position (buffer)
+  (values (buffer-x buffer)
+          (+ (buffer-top-row buffer)
+             (buffer-y buffer))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; buffer-name
 
 (defgeneric buffer-name (buffer)
   (:method ((buffer buffer))
     "No Name Buffer"))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; initialize hooks
@@ -150,12 +159,12 @@
           (insert-ichar-to-lines ichar x y (buffer-lines buffer)))))
 
 (defun insert-new-line (&optional (buffer *current-buffer*))
-  (let ((y (+ (buffer-top-row buffer) (buffer-y buffer))))
+  (multiple-value-bind (x y) (buffer-cursor-position buffer)
+    (declare (ignore x))
     (insert-new-line-at-point y buffer)))
 
 (defun insert-ichar (ichar &optional (buffer *current-buffer*))
-  (let ((x (buffer-x buffer))
-        (y (+ (buffer-top-row buffer) (buffer-y buffer))))
+  (multiple-value-bind (x y) (buffer-cursor-position buffer)
     (insert-ichar-at-point ichar x y buffer)))
 
 
@@ -175,27 +184,29 @@
 
 (defun buffer-name-line (buffer)
   (with-buffer-max-line-width buffer
-    (let* ((name (buffer-name buffer))
-           (lines (string-to-lines name)))
-      (aref lines 0))))
+    (let ((name (buffer-name buffer)))
+      (when name
+        (aref (string-to-lines name) 0)))))
 
 (defun migrate-buffer (&optional (buffer *current-buffer*) (window *window*))
   (let ((x (+ (buffer-position-x buffer) (buffer-x buffer)))
         (y (+ (buffer-position-y buffer) (buffer-y buffer)))
-        (lines (buffer-visible-lines buffer)))
+        (lines (buffer-visible-lines buffer))
+        (name-line (buffer-name-line buffer)))
     (setf (window-x window) x)
     (setf (window-y window) y)
     (loop for line across lines
-          for y from 0 below (1- (buffer-height buffer))
+          for y from 0 below (if name-line
+                                 (1- (buffer-height buffer))
+                                 (buffer-height buffer))
           for win-row from (buffer-position-y buffer)
           with win-col-start = (buffer-position-x buffer)
           with win-col-end = (+ win-col-start (buffer-width buffer))
           do (migrate-buffer-line line window win-row win-col-start win-col-end)
-          finally (migrate-buffer-line (buffer-name-line buffer)
-                                       window
-                                       (1+ win-row)
-                                       win-col-start
-                                       win-col-end))))
+          finally
+             (when name-line
+               (migrate-buffer-line name-line window (1+ win-row)
+                                    win-col-start win-col-end)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -224,34 +235,32 @@
       (next-line buffer)))
 
 (defun cursor-left (&optional (buffer *current-buffer*))
-  (let* ((lines (buffer-lines buffer))
-         (y (+ (buffer-top-row buffer)
-               (buffer-y buffer)))
-         (prev-line (and (> y 0)
-                         (aref lines (1- y)))))
-    (cond
-      ((> (buffer-x buffer) 0)
-       (decf (buffer-x buffer))
-       t)
-      ((and prev-line
-            (not (line-eol-p prev-line)))
-       (setf (buffer-x buffer) (1- (line-length prev-line)))
-       (decf (buffer-y buffer))
-       t)
-      (t nil))))
+  (multiple-value-bind (x y) (buffer-cursor-position buffer)
+    (let* ((lines (buffer-lines buffer))
+           (prev-line (and (> y 0)
+                           (aref lines (1- y)))))
+      (cond
+        ((> x 0)
+         (decf (buffer-x buffer))
+         t)
+        ((and prev-line
+              (not (line-eol-p prev-line)))
+         (setf (buffer-x buffer) (1- (line-length prev-line)))
+         (decf (buffer-y buffer))
+         t)
+        (t nil)))))
 
 (defun cursor-right (&optional (buffer *current-buffer*))
-  (let* ((lines (buffer-lines buffer))
-         (y (+ (buffer-top-row buffer)
-               (buffer-y buffer)))
-         (current-line (aref lines y)))
-    (cond
-      ((< (buffer-x buffer)
-          (1- (line-length current-line)))
-       (incf (buffer-x buffer))
-       t)
-      ((not (line-eol-p current-line))
-       (setf (buffer-x buffer) 0)
-       (incf (buffer-y buffer))
-       t)
-      (t nil))))
+  (multiple-value-bind (x y) (buffer-cursor-position buffer)
+    (let* ((lines (buffer-lines buffer))
+           (current-line (aref lines y)))
+      (cond
+        ((< x
+            (1- (line-length current-line)))
+         (incf (buffer-x buffer))
+         t)
+        ((not (line-eol-p current-line))
+         (setf (buffer-x buffer) 0)
+         (incf (buffer-y buffer))
+         t)
+        (t nil)))))
