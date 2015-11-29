@@ -4,6 +4,8 @@
   (:import-from :led.window
    :make-window)
   (:import-from :led.buffer.buffer
+                :*current-buffer*
+                :*buffers*
                 :redraw-buffer
                 :prev-line
                 :next-line
@@ -16,5 +18,6 @@
                 :insert-new-line
                 :insert-ichar)
   (:import-from :led.buffer.file-buffer
-                :file-buffer))
+                :file-buffer
+                :write-buffer-to-file))
 (in-package :led)

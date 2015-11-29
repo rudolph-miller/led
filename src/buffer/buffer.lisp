@@ -21,7 +21,9 @@
                 :window-y
                 :window-lines
                 :redraw)
-  (:export :buffer
+  (:export :*current-buffer*
+           :*buffers*
+           :buffer
            :buffer-name
            :buffer-lines
            :redraw-buffer
@@ -320,6 +322,8 @@
   t)
 
 (defun insert-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
+  (when (zerop (length (buffer-lines buffer)))
+    (setf (buffer-lines buffer) (vector (make-line :eol-p t))))
   (let* ((line (aref (buffer-lines buffer) y))
          (ichars (line-ichars line)))
     (setf (line-ichars line)
