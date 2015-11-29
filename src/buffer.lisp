@@ -223,7 +223,6 @@
        (decf (buffer-y buffer))
        t)
       (t nil))))
-       
 
 (defun cursor-right (&optional (buffer *current-buffer*))
   (let* ((lines (buffer-lines buffer))

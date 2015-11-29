@@ -1,5 +1,5 @@
 (in-package :cl-user)
-(defpackage led.file
+(defpackage led.file-buffer
   (:use :cl)
   (:import-from :led.string
                 :string-to-lines)
@@ -9,8 +9,10 @@
                 :buffer-name
                 :buffer-lines
                 :set-buffer-content
-                :buffer-content))
-(in-package :led.file)
+                :buffer-content)
+  (:export :file-buffer
+           :write-buffer-to-file))
+(in-package :led.file-buffer)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

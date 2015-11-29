@@ -25,7 +25,7 @@
                  (:file "string")
                  (:file "window")
                  (:file "buffer")
-                 (:file "file")
+                 (:file "file-buffer")
                  (:file "led"))))
   :description "[WIP] LED."
   :long-description
