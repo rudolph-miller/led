@@ -1,9 +1,9 @@
 (in-package :cl-user)
-(defpackage led.file-buffer
+(defpackage led.buffer.file-buffer
   (:use :cl)
-  (:import-from :led.string
+  (:import-from :led.internal.string
                 :string-to-lines)
-  (:import-from :led.buffer
+  (:import-from :led.buffer.buffer
                 :*current-buffer*
                 :buffer
                 :buffer-name
@@ -12,7 +12,7 @@
                 :buffer-content)
   (:export :file-buffer
            :write-buffer-to-file))
-(in-package :led.file-buffer)
+(in-package :led.buffer.file-buffer)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -46,6 +46,7 @@
 (defmethod buffer-name ((buffer file-buffer))
   (let ((path (file-buffer-path buffer)))
     (format nil "FILE: ~a" path)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; write-buffer-to-file

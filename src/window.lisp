@@ -16,16 +16,11 @@
                 :refresh-window
                 :clear-window
                 :finalize)
-  (:import-from :led.util
-                :loop-board
-                :x
-                :y
-                :it)
-  (:import-from :led.character
+  (:import-from :led.internal.character
                 :make-ichar
                 :ichar-val
                 :ichar-attr)
-  (:import-from :led.line
+  (:import-from :led.internal.line
                 :make-line
                 :line-chars)
   (:export :get-window-line
@@ -109,8 +104,13 @@
         (write-char-at-point (window-entity window) (ichar-val ichar) x y))))
 
 (defun window-write-lines (window)
-  (loop-board (window-lines window)
-    (when it (window-write-ichar window it x y))))
+  (loop with lines = (window-lines window)
+        with height = (array-dimension lines 0)
+        with width = (array-dimension lines 1)
+        for y from 0 below height
+        do (loop for x from 0 below width
+                 for ichar = (aref lines y x)
+                 do (when ichar (window-write-ichar window ichar x y)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

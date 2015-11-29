@@ -1,7 +1,7 @@
 (in-package :cl-user)
-(defpackage led.line
+(defpackage led.internal.line
   (:use :cl)
-  (:import-from :led.character
+  (:import-from :led.internal.character
                 :character-to-ichar)
   (:export :make-line
            :line-chars
@@ -9,7 +9,7 @@
            :line-length
            :string-to-line
            :line-chars-with-padding))
-(in-package :led.line)
+(in-package :led.internal.line)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

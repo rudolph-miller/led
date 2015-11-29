@@ -18,14 +18,19 @@
   :components ((:module "src"
                 :serial t
                 :components
-                ((:file "util")
-                 (:file "attribute")
-                 (:file "character")
-                 (:file "line")
-                 (:file "string")
+                ((:module "internal"
+                  :serial t
+                  :components
+                  ((:file "attribute")
+                   (:file "character")
+                   (:file "line")
+                   (:file "string")))
                  (:file "window")
-                 (:file "buffer")
-                 (:file "file-buffer")
+                 (:module "buffer"
+                  :serial t
+                  :components
+                  ((:file "buffer")
+                   (:file "file-buffer")))
                  (:file "led"))))
   :description "[WIP] LED."
   :long-description

@@ -1,12 +1,12 @@
 (in-package :cl-user)
-(defpackage led.character
+(defpackage led.internal.character
   (:use :cl)
   (:export :ichar
            :make-ichar
            :ichar-val
            :ichar-attr
            :character-to-ichar))
-(in-package :led.character)
+(in-package :led.internal.character)
 
 (defstruct ichar
   val

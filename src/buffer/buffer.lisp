@@ -1,16 +1,16 @@
 (in-package :cl-user)
-(defpackage led.buffer
+(defpackage led.buffer.buffer
   (:use :cl)
-  (:import-from :led.character
+  (:import-from :led.internal.character
                 :character-to-ichar)
-  (:import-from :led.line
+  (:import-from :led.internal.line
                 :make-line
                 :line-chars
                 :line-eol-p
                 :line-length
                 :line-chars-with-padding
                 :string-to-line)
-  (:import-from :led.string
+  (:import-from :led.internal.string
                 :string-to-lines
                 :lines-to-string)
   (:import-from :led.window
@@ -35,7 +35,7 @@
            :insert-ichar-at-point
            :insert-new-line
            :insert-ichar))
-(in-package :led.buffer)
+(in-package :led.buffer.buffer)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

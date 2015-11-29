@@ -1,4 +1,20 @@
 (in-package :cl-user)
 (defpackage led
-  (:use :cl))
+  (:use :cl)
+  (:import-from :led.window
+   :make-window)
+  (:import-from :led.buffer.buffer
+                :redraw-buffer
+                :prev-line
+                :next-line
+                :cursor-up
+                :cursor-down
+                :cursor-left
+                :cursor-right
+                :insert-new-line-at-point
+                :insert-ichar-at-point
+                :insert-new-line
+                :insert-ichar)
+  (:import-from :led.buffer.file-buffer
+                :file-buffer))
 (in-package :led)
