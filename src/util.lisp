@@ -1,17 +1,15 @@
 (in-package :cl-user)
 (defpackage led.util
   (:use :cl)
-  (:export :make-vector-with
-           :loop-beard
+  (:export :loop-beard
            :x
            :y
            :it))
 (in-package :led.util)
 
-(defun make-vector-with (n fn)
-  (loop repeat n
-        collecting (funcall fn) into result
-        finally (return (apply #'vector result))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; loop-board
 
 (defmacro loop-board (board &body body)
   `(loop with height = (array-dimension ,board 0)

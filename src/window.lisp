@@ -17,7 +17,6 @@
                 :clear-window
                 :finalize)
   (:import-from :led.util
-                :make-vector-with
                 :loop-board
                 :x
                 :y
@@ -27,7 +26,6 @@
                 :ichar-val
                 :ichar-attr)
   (:import-from :led.line
-                :*max-line-width*
                 :make-line
                 :line-chars)
   (:export :get-window-line
@@ -57,7 +55,6 @@
 ;; make-window
 
 (defun initialize-window-lines (window)
-  (setq *max-line-width* (window-width window))
   (let ((lines (make-array (list (window-height window)
                                  (window-width window))
                            :initial-element nil)))
