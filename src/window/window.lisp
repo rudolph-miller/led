@@ -1,6 +1,7 @@
 (in-package :cl-user)
-(defpackage :led.window
-  (:use :cl)
+(defpackage :led.window.window
+  (:use :cl
+        :led.internal)
   (:import-from :charms/ll
                 :wattron
                 :wattroff)
@@ -16,13 +17,11 @@
                 :refresh-window
                 :clear-window
                 :finalize)
-  (:import-from :led.internal.character
-                :ichar-val
-                :ichar-attr)
-  (:export :make-window
+  (:export :*window*
+           :make-window
            :redraw
            :close-window))
-(in-package :led.window)
+(in-package :led.window.window)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

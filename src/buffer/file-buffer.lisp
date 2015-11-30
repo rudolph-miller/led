@@ -1,17 +1,8 @@
 (in-package :cl-user)
 (defpackage led.buffer.file-buffer
-  (:use :cl)
-  (:import-from :led.internal.string
-                :string-to-lines)
-  (:import-from :led.buffer.buffer
-                :*current-buffer*
-                :buffer
-                :buffer-x
-                :buffer-y
-                :buffer-name
-                :buffer-lines
-                :set-buffer-content
-                :buffer-content)
+  (:use :cl
+        :led.internal
+        :led.buffer.buffer)
   (:export :file-buffer
            :write-buffer-to-file))
 (in-package :led.buffer.file-buffer)

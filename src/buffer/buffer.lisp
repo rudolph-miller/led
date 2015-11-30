@@ -1,26 +1,8 @@
 (in-package :cl-user)
 (defpackage led.buffer.buffer
-  (:use :cl)
-  (:import-from :led.internal.character
-                :character-to-ichar)
-  (:import-from :led.internal.line
-                :make-line
-                :line-ichars
-                :line-eol-p
-                :line-length
-                :line-ichars-with-padding
-                :string-to-line)
-  (:import-from :led.internal.string
-                :string-to-lines
-                :lines-to-string)
-  (:import-from :led.window
-                :*window*
-                :window-width
-                :window-height
-                :window-x
-                :window-y
-                :window-lines
-                :redraw)
+  (:use :cl
+        :led.internal
+        :led.window)
   (:export :*current-buffer*
            :*buffers*
            :buffer

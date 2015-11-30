@@ -1,8 +1,7 @@
 (in-package :cl-user)
 (defpackage led.internal.line
-  (:use :cl)
-  (:import-from :led.internal.character
-                :character-to-ichar)
+  (:use :cl
+        :led.internal.character)
   (:export :make-line
            :line-ichars
            :line-eol-p

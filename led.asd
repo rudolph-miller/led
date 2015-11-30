@@ -24,13 +24,19 @@
                   ((:file "attribute")
                    (:file "character")
                    (:file "line")
-                   (:file "string")))
-                 (:file "window")
+                   (:file "string")
+                   (:file "package")))
+                 (:module "window"
+                  :serial t
+                  :components
+                  ((:file "window")
+                   (:file "package")))
                  (:module "buffer"
                   :serial t
                   :components
                   ((:file "buffer")
-                   (:file "file-buffer")))
+                   (:file "file-buffer")
+                   (:file "package")))
                  (:file "led"))))
   :description "[WIP] LED."
   :long-description
