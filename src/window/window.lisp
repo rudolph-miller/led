@@ -19,6 +19,11 @@
                 :finalize)
   (:export :*window*
            :make-window
+           :window-width
+           :window-height
+           :window-x
+           :window-y
+           :window-lines
            :redraw
            :close-window))
 (in-package :led.window.window)
@@ -27,7 +32,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; global parameters
 
-(defparameter *window* nil)
+(defvar *window* nil)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

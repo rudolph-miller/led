@@ -11,10 +11,11 @@
 
            ;; line
            :make-line
-           :line-chars
+           :line-ichars
            :line-eol-p
            :line-length
            :line-ichars-with-padding
+           :string-to-line
 
            ;; string
            :string-to-lines

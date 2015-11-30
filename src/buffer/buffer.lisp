@@ -6,8 +6,12 @@
   (:export :*current-buffer*
            :*buffers*
            :buffer
+           :buffer-x
+           :buffer-y
            :buffer-name
            :buffer-lines
+           :buffer-content
+           :set-buffer-content
            :redraw-buffer
            :prev-line
            :next-line
@@ -140,14 +144,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer-content
 
+(defun buffer-content (&optional (buffer *current-buffer*))
+  (lines-to-string (buffer-lines buffer)))
+
 (defun set-buffer-content (string &optional (buffer *current-buffer*))
   (setf (buffer-lines buffer)
         (if string
             (string-to-lines string)
             #())))
-
-(defun buffer-content (&optional (buffer *current-buffer*))
-  (lines-to-string (buffer-lines buffer)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
