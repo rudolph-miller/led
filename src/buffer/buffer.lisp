@@ -252,8 +252,11 @@
 
 (defun normalize-y (buffer)
   (let* ((name-line (buffer-name-line buffer))
+         (lines-length (length (buffer-lines buffer)))
          (max (min (- (buffer-height buffer) (if name-line 2 1))
-                  (1- (length (buffer-lines buffer))))))
+                   (if (zerop lines-length)
+                       0
+                       (1- lines-length)))))
     (when (> (buffer-y buffer) max)
       (setf (buffer-y buffer) max))))
 
@@ -340,18 +343,19 @@
   (delete-line-at-point (buffer-y buffer) buffer))
 
 (defun delete-ichar-at-point (x y &optional (buffer *current-buffer*))
-  (let* ((line (aref (buffer-lines buffer) y))
-         (ichars (line-ichars line)))
-    (if (zerop (length ichars))
-        (delete-line-at-point y buffer)
-        (progn
-          (setf (line-ichars line)
-                (concatenate 'vector
-                             (subseq ichars 0 x)
-                             (subseq ichars (1+ x))))
-          (normalize-x buffer)
-          (redraw-buffer)
-          t))))
+  (unless (zerop (length (buffer-lines buffer)))
+    (let* ((line (aref (buffer-lines buffer) y))
+           (ichars (line-ichars line)))
+      (if (zerop (length ichars))
+          (delete-line-at-point y buffer)
+          (progn
+            (setf (line-ichars line)
+                  (concatenate 'vector
+                               (subseq ichars 0 x)
+                               (subseq ichars (1+ x))))
+            (normalize-x buffer)
+            (redraw-buffer)
+            t)))))
 
 (defun delete-ichar (&optional (buffer *current-buffer*))
   (delete-ichar-at-point (buffer-x buffer) (buffer-y buffer) buffer))
