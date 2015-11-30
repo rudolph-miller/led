@@ -33,11 +33,14 @@
            :cursor-down
            :cursor-left
            :cursor-right
+           :delete-line-at-point
            :delete-line
+           :delete-ichar-at-point
            :delete-ichar
            :insert-new-line-at-point
-           :insert-ichar-at-point
            :insert-new-line
+           :insert-next-line
+           :insert-ichar-at-point
            :insert-ichar))
 (in-package :led.buffer.buffer)
 
@@ -170,7 +173,7 @@
 
 (defun buffer-migrate-lines (buffer length)
   (loop with top-row = (buffer-top-row buffer)
-        with result = (make-array length :initial-element (make-line))
+        with result = (make-array length :initial-element (make-line :eol-p t))
         with lines = (buffer-lines buffer)
         for y from top-row below (length (buffer-lines buffer))
         with result-length = (length result)
@@ -247,6 +250,13 @@
         (setf (buffer-x buffer)
               (min (buffer-x buffer) (1- current-line-length))))))
 
+(defun normalize-y (buffer)
+  (let* ((name-line (buffer-name-line buffer))
+         (max (min (- (buffer-height buffer) (if name-line 2 1))
+                  (1- (length (buffer-lines buffer))))))
+    (when (> (buffer-y buffer) max)
+      (setf (buffer-y buffer) max))))
+
 (defun prev-line (&optional (buffer *current-buffer*))
   (when (> (buffer-top-row buffer) 0)
     (let ((name-line (buffer-name-line buffer)))
@@ -289,7 +299,8 @@
     (let ((name-line (buffer-name-line buffer)))
       (prog1
           (cond
-            ((< y (- (buffer-height buffer) (if name-line 2 1)))
+            ((and (< y (- (buffer-height buffer) (if name-line 2 1)))
+                  (< (buffer-y buffer) (1- (length (buffer-lines buffer)))))
              (incf (buffer-y buffer)) t)
             ((next-line buffer)
              (incf (buffer-y buffer)) t)
@@ -320,6 +331,8 @@
             (concatenate 'vector
                          (subseq lines 0 y)
                          (subseq lines (1+ y))))
+      (normalize-y buffer)
+      (normalize-x buffer)
       (redraw-buffer)
       t)))
 
@@ -336,6 +349,7 @@
                 (concatenate 'vector
                              (subseq ichars 0 x)
                              (subseq ichars (1+ x))))
+          (normalize-x buffer)
           (redraw-buffer)
           t))))
 
@@ -356,6 +370,12 @@
   (redraw-buffer)
   t)
 
+(defun insert-new-line (&optional (buffer *current-buffer*))
+  (insert-new-line-at-point (buffer-y buffer) buffer))
+
+(defun insert-next-line (&optional (buffer *current-buffer*))
+  (insert-new-line-at-point (1+ (buffer-y buffer)) buffer))
+
 (defun insert-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
   (when (zerop (length (buffer-lines buffer)))
     (setf (buffer-lines buffer) (vector (make-line :eol-p t))))
@@ -368,9 +388,6 @@
                        (subseq ichars x))))
   (redraw-buffer)
   t)
-
-(defun insert-new-line (&optional (buffer *current-buffer*))
-  (insert-new-line-at-point (buffer-y buffer) buffer))
 
 (defun insert-ichar (ichar &optional (buffer *current-buffer*))
   (insert-ichar-at-point ichar (buffer-x buffer) (buffer-y buffer) buffer))
