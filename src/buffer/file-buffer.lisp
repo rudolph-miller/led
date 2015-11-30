@@ -6,6 +6,8 @@
   (:import-from :led.buffer.buffer
                 :*current-buffer*
                 :buffer
+                :buffer-x
+                :buffer-y
                 :buffer-name
                 :buffer-lines
                 :set-buffer-content
@@ -39,7 +41,7 @@
 
 (defmethod buffer-name ((buffer file-buffer))
   (let ((path (file-buffer-path buffer)))
-    (format nil "FILE: ~a" path)))
+    (format nil "FILE: ~a (~a,~a)" path (buffer-x buffer) (buffer-y buffer))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
