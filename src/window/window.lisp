@@ -11,6 +11,7 @@
                 :disable-echoing
                 :enable-raw-input
                 :enable-non-blocking-mode
+                :enable-extra-keys
                 :window-dimensions
                 :write-char-at-point
                 :move-cursor
@@ -72,6 +73,7 @@
         (disable-echoing)
         (enable-raw-input :interpret-control-characters t)
         (enable-non-blocking-mode (window-entity window))
+        (enable-extra-keys (window-entity window))
         (initialize-window-dimensions window)
         (initialize-window-lines window)
         (setq *window* window))))
