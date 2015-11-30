@@ -13,6 +13,8 @@
                 :cursor-down
                 :cursor-left
                 :cursor-right
+                :delete-line
+                :delete-ichar
                 :insert-new-line-at-point
                 :insert-ichar-at-point
                 :insert-new-line

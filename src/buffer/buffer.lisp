@@ -33,6 +33,8 @@
            :cursor-down
            :cursor-left
            :cursor-right
+           :delete-line
+           :delete-ichar
            :insert-new-line-at-point
            :insert-ichar-at-point
            :insert-new-line
@@ -306,6 +308,39 @@
     (when (< (buffer-x buffer) (1- (line-length current-line)))
       (incf (buffer-x buffer))
       (redraw-buffer buffer))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; delete
+
+(defun delete-line-at-point (y &optional (buffer *current-buffer*))
+  (let ((lines (buffer-lines buffer)))
+    (unless (zerop (length lines))
+      (setf (buffer-lines buffer)
+            (concatenate 'vector
+                         (subseq lines 0 y)
+                         (subseq lines (1+ y))))
+      (redraw-buffer)
+      t)))
+
+(defun delete-line (&optional (buffer *current-buffer*))
+  (delete-line-at-point (buffer-y buffer) buffer))
+
+(defun delete-ichar-at-point (x y &optional (buffer *current-buffer*))
+  (let* ((line (aref (buffer-lines buffer) y))
+         (ichars (line-ichars line)))
+    (if (zerop (length ichars))
+        (delete-line-at-point y buffer)
+        (progn
+          (setf (line-ichars line)
+                (concatenate 'vector
+                             (subseq ichars 0 x)
+                             (subseq ichars (1+ x))))
+          (redraw-buffer)
+          t))))
+
+(defun delete-ichar (&optional (buffer *current-buffer*))
+  (delete-ichar-at-point (buffer-x buffer) (buffer-y buffer) buffer))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
