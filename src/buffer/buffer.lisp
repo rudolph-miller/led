@@ -208,11 +208,14 @@
       (setf (line-eol-p line) t)
       line)))
 
+(defun buffer-height-without-name-line (buffer)
+  (if (buffer-name buffer)
+      (1- (buffer-height buffer))
+      (buffer-height buffer)))
+
 (defun migrate-buffer (&optional (buffer *current-buffer*) (window *window*))
   (let* ((name-line (buffer-name-line buffer))
-         (migrate-line-length (if name-line
-                                  (1- (buffer-height buffer))
-                                  (buffer-height buffer)))
+         (migrate-line-length (buffer-height-without-name-line buffer))
          (lines (buffer-migrate-lines buffer migrate-line-length)))
     (multiple-value-bind (x y) (buffer-window-cursor-position buffer)
       (loop for line across lines
@@ -254,9 +257,8 @@
               (min (buffer-x buffer) (1- current-line-length))))))
 
 (defun normalize-y (buffer)
-  (let* ((name-line (buffer-name-line buffer))
-         (lines-length (length (buffer-lines buffer)))
-         (max (min (- (buffer-height buffer) (if name-line 2 1))
+  (let* ((lines-length (length (buffer-lines buffer)))
+         (max (min (1- (buffer-height-without-name-line buffer))
                    (if (zerop lines-length)
                        0
                        (1- lines-length)))))
@@ -265,12 +267,10 @@
 
 (defun prev-line (&optional (buffer *current-buffer*))
   (when (> (buffer-top-row buffer) 0)
-    (let ((name-line (buffer-name-line buffer)))
-      (when (= (buffer-y buffer)
-               (+ (buffer-top-row buffer)
-                  (- (buffer-height buffer)
-                     (if name-line 3 2))))
-        (decf (buffer-y buffer))))
+    (when (= (buffer-y buffer)
+             (+ (buffer-top-row buffer)
+                (- (buffer-height-without-name-line buffer) 2)))
+      (decf (buffer-y buffer)))
     (decf (buffer-top-row buffer))
     (normalize-x buffer)
     (redraw-buffer buffer)))
@@ -370,7 +370,7 @@
 (defun insert-new-line-at-point (y &optional (buffer *current-buffer*))
   (let ((lines (buffer-lines buffer)))
     (when (zerop (length lines))
-      (setf (buffer-lines buffer)
+      (setf lines
             (vector (make-line :eol-p t))))
     (setf (buffer-lines buffer)
           (concatenate 'vector
