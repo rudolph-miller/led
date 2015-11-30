@@ -242,9 +242,12 @@
 ;; buffer controllers
 
 (defun normalize-x (buffer)
-  (let ((current-line-length (line-length
-                              (aref (buffer-lines buffer)
-                                    (buffer-y buffer)))))
+  (let* ((lines (buffer-lines buffer))
+         (current-line-length (if (zerop (length lines))
+                                  0
+                                  (line-length
+                                   (aref (buffer-lines buffer)
+                                         (buffer-y buffer))))))
     (if (zerop current-line-length)
         (setf (buffer-x buffer) 0)
         (setf (buffer-x buffer)
@@ -366,6 +369,9 @@
 
 (defun insert-new-line-at-point (y &optional (buffer *current-buffer*))
   (let ((lines (buffer-lines buffer)))
+    (when (zerop (length lines))
+      (setf (buffer-lines buffer)
+            (vector (make-line :eol-p t))))
     (setf (buffer-lines buffer)
           (concatenate 'vector
                        (subseq lines 0 y)
