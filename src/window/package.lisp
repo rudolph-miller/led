@@ -9,5 +9,6 @@
            :window-x
            :window-y
            :window-lines
+           :window-entity
            :redraw
            :close-window))

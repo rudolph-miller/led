@@ -14,7 +14,8 @@
   :license "MIT"
   :homepage "https://github.com/Rudolph-Miller/led"
   :depends-on (:alexandria
-               :cl-charms)
+               :cl-charms
+               :babel)
   :components ((:module "src"
                 :serial t
                 :components
@@ -30,6 +31,7 @@
                   :serial t
                   :components
                   ((:file "window")
+                   (:file "input")
                    (:file "package")))
                  (:module "buffer"
                   :serial t
