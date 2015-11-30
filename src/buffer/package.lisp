@@ -6,7 +6,7 @@
            :*current-buffer*
            :*buffers*
            :buffer
-           :buffer-name
+           :buffer-status
            :buffer-lines
            :redraw-buffer
            :prev-line

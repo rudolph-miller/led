@@ -28,9 +28,9 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; buffer-name
+;; buffer-status
 
-(defmethod buffer-name ((buffer file-buffer))
+(defmethod buffer-status ((buffer file-buffer))
   (let ((path (file-buffer-path buffer)))
     (format nil "FILE: ~a (~a,~a)" path (buffer-x buffer) (buffer-y buffer))))
 

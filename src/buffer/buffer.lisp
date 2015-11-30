@@ -8,7 +8,7 @@
            :buffer
            :buffer-x
            :buffer-y
-           :buffer-name
+           :buffer-status
            :buffer-lines
            :buffer-content
            :set-buffer-content
@@ -107,9 +107,9 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; buffer-name
+;; buffer-status
 
-(defgeneric buffer-name (buffer)
+(defgeneric buffer-status (buffer)
   (:method ((buffer buffer))
     "No Name Buffer"))
 
@@ -187,20 +187,20 @@
         finally (unless (line-eol-p line)
                   (setf (aref win-lines y x) (character-to-ichar #\\)))))
 
-(defun buffer-name-line (buffer)
-  (let* ((name (buffer-name buffer))
+(defun buffer-status-line (buffer)
+  (let* ((name (buffer-status buffer))
          (line (when name (string-to-line (car (fold name buffer))))))
     (when line
       (setf (line-eol-p line) t)
       line)))
 
 (defun buffer-height-without-name-line (buffer)
-  (if (buffer-name buffer)
+  (if (buffer-status buffer)
       (1- (buffer-height buffer))
       (buffer-height buffer)))
 
 (defun migrate-buffer (&optional (buffer *current-buffer*) (window *window*))
-  (let* ((name-line (buffer-name-line buffer))
+  (let* ((name-line (buffer-status-line buffer))
          (migrate-line-length (buffer-height-without-name-line buffer))
          (lines (buffer-migrate-lines buffer migrate-line-length)))
     (multiple-value-bind (x y) (buffer-window-cursor-position buffer)
@@ -288,7 +288,7 @@
 (defun cursor-down (&optional (buffer *current-buffer*))
   (multiple-value-bind (x y) (buffer-window-cursor-position buffer)
     (declare (ignore x))
-    (let ((name-line (buffer-name-line buffer)))
+    (let ((name-line (buffer-status-line buffer)))
       (prog1
           (cond
             ((and (< y (- (buffer-height buffer) (if name-line 2 1)))
