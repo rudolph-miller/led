@@ -26,6 +26,7 @@
                    (:file "character")
                    (:file "line")
                    (:file "string")
+                   (:file "key")
                    (:file "package")))
                  (:module "window"
                   :serial t
