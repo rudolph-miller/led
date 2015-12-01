@@ -22,10 +22,10 @@
 ;; char-dsl and dsl-char
 
 (defun char-dsl (char)
-  (cdr (assoc char *code-dsl*)))
+  (cdr (assoc char *char-dsl*)))
 
 (defun dsl-char (dsl)
-  (loop for (c . d) in *code-dsl*
+  (loop for (c . d) in *char-dsl*
         when (equal dsl d)
           do (return c)))
 
