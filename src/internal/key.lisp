@@ -4,8 +4,8 @@
   (:export :*global-key-mapping*
            :get-namespace
            :create-namespace
-           :register-key-binding
-           :unregister-key-binding))
+           :register-key
+           :unregister-key))
 (in-package :led.internal.key)
 
 
@@ -83,7 +83,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; register-key-binding
+;; register-key and unregister-key
 
 (defun parse-dsl (string)
   (loop with length = (length string)
@@ -95,13 +95,11 @@
                                do (incf position len)
                                   (return char))
         unless dsl-char
-          do (error "Parse key binding error")
+          do (error "Parse key dsl error")
         collecting dsl-char
         while (< position length)))
 
-(defun register-key-binding (dsl target &optional
-                                          (mapping *global-key-mapping*)
-                                          (force nil))
+(defun register-key (dsl target &optional (mapping *global-key-mapping*) (force nil))
   (let ((chars (parse-dsl dsl)))
     (loop for char in chars
           with last-position = (1- (length chars))
@@ -115,7 +113,7 @@
                   (if (and (typep got 'hash-table)
                            (= (hash-table-count got) 0))
                       (setf (gethash char prev) target)
-                      (error "Key Binding Conflict")))
+                      (error "Key Conflict")))
                  ((typep target 'function)
                   (setf (gethash char prev) target))
                  ((null target)
@@ -127,8 +125,8 @@
                        (function (if force
                                      (setf (gethash char prev)
                                            (make-hash-table :test #'equal))
-                                     (error "Key Binding Conflict")))
+                                     (error "Key Conflict")))
                        (hash-table got))))))
 
-(defun unregister-key-binding (dsl &optional (mapping *global-key-mapping*))
-  (register-key-binding dsl nil mapping t))
+(defun unregister-key (dsl &optional (mapping *global-key-mapping*))
+  (register-key dsl nil mapping t))

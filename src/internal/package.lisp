@@ -26,6 +26,6 @@
            :*global-key-mapping*
            :get-namespace
            :create-namespace
-           :register-key-binding
-           :unregister-key-binding))
+           :register-key
+           :unregister-key))
 
