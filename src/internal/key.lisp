@@ -114,10 +114,13 @@
                            (= (hash-table-count got) 0))
                       (setf (gethash char prev) target)
                       (error "Key Conflict")))
+                 ((null target)
+                  (remhash char prev))
                  ((typep target 'function)
                   (setf (gethash char prev) target))
-                 ((null target)
-                  (remhash char prev)))
+                 ((typep target 'symbol)
+                  (let ((function (symbol-function target)))
+                    (setf (gethash char prev) function))))
           else
             do (setq prev
                      (etypecase got

@@ -7,7 +7,9 @@
 (in-package :led.mapping.util)
 
 (defun global-set-key (dsl function)
-  (register-key dsl function *global-key-mapping* t))
+  (register-key dsl function *global-key-mapping* t)
+  function)
 
 (defun define-key (mapping dsl function)
-  (register-key dsl function mapping t))
+  (register-key dsl function mapping t)
+  function)
