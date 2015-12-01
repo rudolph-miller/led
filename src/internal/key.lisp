@@ -99,7 +99,9 @@
         collecting dsl-char
         while (< position length)))
 
-(defun register-key-binding (dsl function &optional (mapping *global-key-mapping*) (force nil))
+(defun register-key-binding (dsl target &optional
+                                          (mapping *global-key-mapping*)
+                                          (force nil))
   (let ((chars (parse-dsl dsl)))
     (loop for char in chars
           with last-position = (1- (length chars))
@@ -108,15 +110,23 @@
           with prev = mapping
           for got = (gethash char prev)
           if last-p
-            do (if (and (not force) got)
-                   (error "Key Binding Conflict")
-                   (setf (gethash char prev) function))
+            do (cond
+                 ((and (not force) got)
+                  (if (and (typep got 'hash-table)
+                           (= (hash-table-count got) 0))
+                      (setf (gethash char prev) target)
+                      (error "Key Binding Conflict")))
+                 ((typep target 'function)
+                  (setf (gethash char prev) target))
+                 ((null target)
+                  (remhash char prev)))
           else
             do (setq prev
                      (etypecase got
                        (null (setf (gethash char prev) (make-hash-table :test #'equal)))
                        (function (if force
-                                     (setf (gethash char prev) (make-hash-table :test #'equal))
+                                     (setf (gethash char prev)
+                                           (make-hash-table :test #'equal))
                                      (error "Key Binding Conflict")))
                        (hash-table got))))))
 
