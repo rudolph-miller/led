@@ -43,7 +43,8 @@
                  (:module "mapping"
                   :serial t
                   :components
-                  ((:file "default")
+                  ((:file "util")
+                   (:file "default")
                    (:file "package")))
                  (:file "led"))))
   :description "[WIP] LED."
