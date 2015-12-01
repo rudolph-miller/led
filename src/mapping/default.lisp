@@ -2,5 +2,5 @@
 (defpackage led.mapping.default
   (:use :cl
         :led.internal)
-  (:export)
+  (:export))
 (in-package :led.mapping.default)
