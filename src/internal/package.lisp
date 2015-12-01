@@ -2,7 +2,8 @@
 (defpackage led.internal
   (:use :led.internal.character
         :led.internal.line
-        :led.internal.string)
+        :led.internal.string
+        :led.internal.key)
   (:export ;; character
            :ichar
            :ichar-val
@@ -19,4 +20,12 @@
 
            ;; string
            :string-to-lines
-           :lines-to-string))
+           :lines-to-string
+
+           ;; key
+           :*global-key-mapping*
+           :get-namespace
+           :create-namespace
+           :register-key-binding
+           :unregister-key-binding))
+

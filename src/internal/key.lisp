@@ -1,11 +1,25 @@
 (in-package :cl-user)
 (defpackage led.internal.key
-  (:use :cl))
+  (:use :cl)
+  (:export :*global-key-mapping*
+           :get-namespace
+           :create-namespace
+           :register-key-binding
+           :unregister-key-binding))
 (in-package :led.internal.key)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; globals
 
 (defparameter *global-key-mapping* (make-hash-table :test #'equal))
 
+(defparameter *mapping-namespaces* (make-hash-table :test #'equal))
+
 (defparameter *char-dsl* nil)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; char-dsl and dsl-char
 
 (defun char-dsl (char)
   (cdr (assoc char *code-dsl*)))
@@ -14,6 +28,10 @@
   (loop for (c . d) in *code-dsl*
         when (equal dsl d)
           do (return c)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; register-dsl
 
 (defun register-dsl (code dsl)
   (push (cons (code-char code) dsl) *char-dsl*))
@@ -52,6 +70,21 @@
 (register-dsl 27 "<Esc>")
 (register-dsl 127 "[del]")
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; namespace
+
+(defun get-namespace (name)
+  (gethash name *mapping-namespaces*))
+
+(defun create-namespace (name)
+  (unless (get-namespace name)
+  (setf (gethash name *mapping-namespaces*) (make-hash-table :test #'equal))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; register-key-binding
+
 (defun parse-dsl (string)
   (loop with length = (length string)
         with position = 0
@@ -66,4 +99,26 @@
         collecting dsl-char
         while (< position length)))
 
-(defun register-key-binding (string function))
+(defun register-key-binding (dsl function &optional (mapping *global-key-mapping*) (force nil))
+  (let ((chars (parse-dsl dsl)))
+    (loop for char in chars
+          with last-position = (1- (length chars))
+          for position from 0
+          for last-p = (= position last-position)
+          with prev = mapping
+          for got = (gethash char prev)
+          if last-p
+            do (if (and (not force) got)
+                   (error "Key Binding Conflict")
+                   (setf (gethash char prev) function))
+          else
+            do (setq prev
+                     (etypecase got
+                       (null (setf (gethash char prev) (make-hash-table :test #'equal)))
+                       (function (if force
+                                     (setf (gethash char prev) (make-hash-table :test #'equal))
+                                     (error "Key Binding Conflict")))
+                       (hash-table got))))))
+
+(defun unregister-key-binding (dsl &optional (mapping *global-key-mapping*))
+  (register-key-binding dsl nil mapping t))
