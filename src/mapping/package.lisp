@@ -2,5 +2,7 @@
 (defpackage :led.mapping
   (:use :led.mapping.util
         :led.mapping.default)
-  (:export))
+  (:export ;; util
+           :global-set-key
+           :define-key))
 (in-package :led.mapping)
