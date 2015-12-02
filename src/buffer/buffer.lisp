@@ -126,6 +126,11 @@
   (push-buffer buffer)
   (setq *current-buffer* buffer))
 
+(defmethod initialize-instance :around ((buffer buffer) &rest initargs)
+  (declare (ignore initargs))
+  (call-next-method)
+  (redraw-buffer))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; *buffers* operations
