@@ -15,7 +15,8 @@
   :homepage "https://github.com/Rudolph-Miller/led"
   :depends-on (:alexandria
                :cl-charms
-               :babel)
+               :babel
+               :bordeaux-threads)
   :components ((:module "src"
                 :serial t
                 :components

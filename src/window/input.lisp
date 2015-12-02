@@ -9,7 +9,11 @@
                 :window-pointer)
   (:import-from :babel
                 :octets-to-string)
-  (:export :get-char))
+  (:import-from :bordeaux-threads
+                :make-thread
+                :destroy-thread)
+  (:export :start-input-loop
+           :stop-input-loop))
 (in-package :led.window.input)
 
 
@@ -45,6 +49,10 @@
                                     codes))
                       (code-char first-code)))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; input-loop
+
 (defun fn-or-next-contexts (char contexts)
   (loop for context in contexts
         for got = (gethash char context)
@@ -61,3 +69,17 @@
              (cons (setq contexts got))
              (function (funcall got))
              (null (setq contexts (list *global-key-mapping*))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; start-input-loop and stop-input-loop
+
+(defvar *input-loop-thread* nil)
+
+(defun start-input-loop ()
+  (setq *input-loop-thread* (make-thread #'input-loop)))
+
+(defun stop-input-loop ()
+  (destroy-thread *input-loop-thread*)
+  (setq *input-loop-thead* nil)
+  t)
