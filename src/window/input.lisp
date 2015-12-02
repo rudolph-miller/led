@@ -1,6 +1,7 @@
 (in-package :cl-user)
 (defpackage :led.window.input
   (:use :cl
+        :led.internal
         :led.window.window)
   (:import-from :charms/ll
                 :wgetch)
@@ -43,3 +44,20 @@
                                     (list first-code)
                                     codes))
                       (code-char first-code)))))
+
+(defun fn-or-next-contexts (char contexts)
+  (loop for context in contexts
+        for got = (gethash char context)
+        when (typep got 'function)
+          do (return got)
+        when got
+          collecting got))
+
+(defun input-loop ()
+  (loop for char = (get-char)
+        with contexts = (list *global-key-mapping*)
+        for got = (fn-or-next-contexts char contexts)
+        do (etypecase got
+             (cons (setq contexts got))
+             (function (funcall got))
+             (null (setq contexts (list *global-key-mapping*))))))
