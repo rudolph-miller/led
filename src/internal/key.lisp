@@ -116,11 +116,9 @@
                       (error "Key Conflict")))
                  ((null target)
                   (remhash char prev))
-                 ((typep target 'function)
-                  (setf (gethash char prev) target))
-                 ((typep target 'symbol)
-                  (let ((function (symbol-function target)))
-                    (setf (gethash char prev) function))))
+                 ((or (typep target 'function)
+                      (typep target 'symbol))
+                  (setf (gethash char prev) target)))
           else
             do (setq prev
                      (etypecase got

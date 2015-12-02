@@ -56,9 +56,10 @@
 (defun fn-or-next-contexts (char contexts)
   (loop for context in contexts
         for got = (gethash char context)
-        when (typep got 'function)
+        when (or (typep got 'function)
+                 (typep got 'symbol))
           do (return got)
-        when got
+        when (typep got 'hash-table)
           collecting got))
 
 (defun input-loop ()
@@ -68,6 +69,7 @@
         do (etypecase got
              (cons (setq contexts got))
              (function (funcall got))
+             (symbol (funcall got))
              (null (setq contexts (list *global-key-mapping*))))))
 
 

@@ -199,14 +199,14 @@
       (setf (line-eol-p line) t)
       line)))
 
-(defun buffer-height-without-name-line (buffer)
+(defun buffer-height-without-status-line (buffer)
   (if (buffer-status buffer)
       (1- (buffer-height buffer))
       (buffer-height buffer)))
 
 (defun migrate-buffer (&optional (buffer *current-buffer*) (window *window*))
-  (let* ((name-line (buffer-status-line buffer))
-         (migrate-line-length (buffer-height-without-name-line buffer))
+  (let* ((status-line (buffer-status-line buffer))
+         (migrate-line-length (buffer-height-without-status-line buffer))
          (lines (buffer-migrate-lines buffer migrate-line-length)))
     (multiple-value-bind (x y) (buffer-window-cursor-position buffer)
       (loop for line across lines
@@ -214,8 +214,8 @@
             with win-col-start = (buffer-position-x buffer)
             with win-col-end = (+ win-col-start (buffer-width buffer))
             do (migrate-buffer-line line window win-row win-col-start win-col-end)
-            finally (when name-line
-                      (migrate-buffer-line name-line
+            finally (when status-line
+                      (migrate-buffer-line status-line
                                            window
                                            (1- (buffer-height buffer))
                                            win-col-start win-col-end)))
@@ -235,6 +235,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer controllers
 
+(defun buffer-visible-line-max (buffer)
+  (+ (buffer-top-row buffer)
+     (1- (length (buffer-visible-lines buffer)))))
+
 (defun normalize-x (buffer)
   (let* ((lines (buffer-lines buffer))
          (current-line-length (if (zerop (length lines))
@@ -249,7 +253,8 @@
 
 (defun normalize-y (buffer)
   (let* ((lines-length (length (buffer-lines buffer)))
-         (max (min (1- (buffer-height-without-name-line buffer))
+         (max (min (1- (+ (buffer-top-row buffer)
+                          (1- (buffer-height-without-status-line buffer))))
                    (if (zerop lines-length)
                        0
                        (1- lines-length)))))
@@ -260,7 +265,7 @@
   (when (> (buffer-top-row buffer) 0)
     (when (= (buffer-y buffer)
              (+ (buffer-top-row buffer)
-                (- (buffer-height-without-name-line buffer) 2)))
+                (- (buffer-height-without-status-line buffer) 2)))
       (decf (buffer-y buffer)))
     (decf (buffer-top-row buffer))
     (normalize-x buffer)
@@ -274,6 +279,7 @@
              (buffer-top-row buffer))
       (incf (buffer-y buffer)))
     (incf (buffer-top-row buffer))
+    (normalize-y buffer)
     (normalize-x buffer)
     (redraw-buffer buffer)))
 
@@ -291,19 +297,17 @@
       (redraw-buffer buffer))))
 
 (defun cursor-down (&optional (buffer *current-buffer*))
-  (multiple-value-bind (x y) (buffer-window-cursor-position buffer)
-    (declare (ignore x))
-    (let ((name-line (buffer-status-line buffer)))
-      (prog1
-          (cond
-            ((and (< y (- (buffer-height buffer) (if name-line 2 1)))
-                  (< (buffer-y buffer) (1- (length (buffer-lines buffer)))))
-             (incf (buffer-y buffer)) t)
-            ((next-line buffer)
-             (incf (buffer-y buffer)) t)
-            (t nil))
-        (normalize-x buffer)
-        (redraw-buffer buffer)))))
+  (prog1
+      (cond
+        ((and (< (buffer-y buffer) (buffer-visible-line-max buffer))
+              (< (buffer-y buffer)
+                 (1- (length (buffer-lines buffer)))))
+         (incf (buffer-y buffer)) t)
+        ((next-line buffer)
+         (incf (buffer-y buffer)) t)
+        (t nil))
+    (normalize-x buffer)
+    (redraw-buffer buffer)))
 
 (defun cursor-left (&optional (buffer *current-buffer*))
   (when (> (buffer-x buffer) 0)
