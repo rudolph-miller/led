@@ -22,6 +22,10 @@
            :string-to-lines
            :lines-to-string
 
+           ;; mode
+           :*modes*
+           :*current-mode*
+
            ;; key
            :*global-key-mapping*
            :get-namespace

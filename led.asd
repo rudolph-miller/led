@@ -27,6 +27,7 @@
                    (:file "character")
                    (:file "line")
                    (:file "string")
+                   (:file "mode")
                    (:file "key")
                    (:file "package")))
                  (:module "window"
