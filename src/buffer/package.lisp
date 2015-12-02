@@ -27,4 +27,7 @@
 
            ;; file-buffer
            :file-buffer
-           :write-buffer-to-file))
+           :write-buffer-to-file
+
+           ;; command-line-buffer
+           ))
