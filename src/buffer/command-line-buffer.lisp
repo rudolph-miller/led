@@ -5,7 +5,8 @@
         :led.window
         :led.buffer.buffer)
   (:export :*command-line-buffer*
-           :command-line-buffer))
+           :command-line-buffer
+           :on-command-line))
 (in-package :led.buffer.command-line-buffer)
 
 
@@ -28,7 +29,6 @@
 
 (defun initialize-command-line-buffer (buffer)
   (setf (buffer-height buffer) *command-line-buffer-height*)
-  (setf (buffer-top-row buffer) 0)
   (set-buffer-content nil buffer)
   (setf (buffer-position-x buffer) 0)
   (setf (buffer-position-y buffer) (1- (window-height *window*))))
@@ -44,9 +44,21 @@
     (setq *command-line-buffer* buffer)
     (setq *current-buffer* current)))
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer-status
 
 (defmethod buffer-status ((buffer command-line-buffer))
   (declare (ignore buffer))
   nil)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; set-command-line-buffer-content
+
+;; FIXME: doesn't support color
+
+(defun on-command-line (content)
+  (assert *command-line-buffer*)
+  (set-buffer-content content *command-line-buffer*)
+  (redraw-buffer *command-line-buffer*))
