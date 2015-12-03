@@ -394,6 +394,7 @@
                        (subseq lines 0 y)
                        (vector (make-line :eol-p t))
                        (subseq lines y))))
+  (normalize-x buffer)
   (redraw-buffer)
   t)
 

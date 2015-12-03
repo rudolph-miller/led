@@ -57,3 +57,18 @@
       for char = (code-char code)
       do (set-insert-char-key char)
          (set-replace-char-key char))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; insert-new-line
+
+(defun insert-next-line-and-cursor-down-and-insert-mode ()
+  (insert-next-line)
+  (cursor-down)
+  (insert-mode))
+
+(defun insert-new-line-and-insert-mode ()
+  (insert-new-line)
+  (insert-mode))
+
+(global-set-key :normal "o" 'insert-next-line-and-cursor-down-and-insert-mode)
+(global-set-key :normal "O" 'insert-new-line-and-insert-mode)
