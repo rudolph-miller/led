@@ -28,6 +28,7 @@
            :delete-line
            :delete-ichar-at-point
            :delete-ichar
+           :delete-prev-ichar
            :replace-ichar-at-point
            :replace-ichar
            :insert-new-line-at-point
@@ -361,6 +362,8 @@
 (defun delete-ichar (&optional (buffer *current-buffer*))
   (delete-ichar-at-point (buffer-x buffer) (buffer-y buffer) buffer))
 
+(defun delete-prev-ichar (&optional (buffer *current-buffer*))
+  (delete-ichar-at-point (max (1- (buffer-x buffer)) 0) (buffer-y buffer) buffer))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; replace

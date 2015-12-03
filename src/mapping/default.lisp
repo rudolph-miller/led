@@ -79,3 +79,5 @@
 
 (global-set-key :normal "dd" 'delete-line)
 (global-set-key :normal "x" 'delete-ichar)
+(global-set-key :insert "<C-h>" 'delete-prev-ichar)
+(global-set-key :insert "<BS>" 'delete-prev-ichar)
