@@ -5,6 +5,7 @@
         :led.buffer)
   (:export :global-set-key
            :normal-mode
+           :normal-mode-and-cursor-left
            :insert-mode
            :insert-mode-and-cursor-right
            :command-line-mode))
@@ -28,6 +29,10 @@
 
 (defun normal-mode ()
   (setf (current-mode) :normal))
+
+(defun normal-mode-and-cursor-left ()
+  (normal-mode)
+  (cursor-left))
 
 (defun insert-mode ()
   (setf (current-mode) :insert))
