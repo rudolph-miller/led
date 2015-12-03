@@ -365,7 +365,13 @@
   (delete-ichar-at-point (buffer-x buffer) (buffer-y buffer) buffer))
 
 (defun delete-prev-ichar (&optional (buffer *current-buffer*))
-  (delete-ichar-at-point (max (1- (buffer-x buffer)) 0) (buffer-y buffer) buffer))
+  (when (delete-ichar-at-point (max (1- (buffer-x buffer)) 0)
+                               (buffer-y buffer)
+                               buffer)
+    (when (and (> (buffer-x buffer) 0)
+               (< (buffer-x buffer) (buffer-x-max buffer)))
+      (decf (buffer-x buffer)))
+    t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; replace
