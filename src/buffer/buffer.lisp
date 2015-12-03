@@ -6,8 +6,13 @@
   (:export :*current-buffer*
            :*buffers*
            :buffer
+           :buffer-position-x
+           :buffer-position-y
+           :buffer-height
+           :buffer-width
            :buffer-x
            :buffer-y
+           :buffer-top-row
            :buffer-status
            :buffer-lines
            :buffer-content
@@ -115,7 +120,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; initialize hooks
+;; initialize-instance
 
 (defmethod initialize-instance :before ((buffer buffer) &rest initargs)
   (declare (ignore initargs))
@@ -252,12 +257,7 @@
               (min (buffer-x buffer) (1- current-line-length))))))
 
 (defun normalize-y (buffer)
-  (let* ((lines-length (length (buffer-lines buffer)))
-         (max (min (1- (+ (buffer-top-row buffer)
-                          (1- (buffer-height-without-status-line buffer))))
-                   (if (zerop lines-length)
-                       0
-                       (1- lines-length)))))
+  (let ((max (buffer-visible-line-max buffer)))
     (when (> (buffer-y buffer) max)
       (setf (buffer-y buffer) max))))
 
@@ -299,15 +299,14 @@
 (defun cursor-down (&optional (buffer *current-buffer*))
   (prog1
       (cond
-        ((and (< (buffer-y buffer) (buffer-visible-line-max buffer))
-              (< (buffer-y buffer)
-                 (1- (length (buffer-lines buffer)))))
+        ((< (buffer-y buffer) (buffer-visible-line-max buffer))
          (incf (buffer-y buffer)) t)
-        ((next-line buffer)
+        ((and (next-line buffer)
+              (< (buffer-y buffer) (buffer-visible-line-max buffer))
          (incf (buffer-y buffer)) t)
         (t nil))
     (normalize-x buffer)
-    (redraw-buffer buffer)))
+    (redraw-buffer buffer))))
 
 (defun cursor-left (&optional (buffer *current-buffer*))
   (when (> (buffer-x buffer) 0)
