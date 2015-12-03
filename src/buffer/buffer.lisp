@@ -15,6 +15,7 @@
            :buffer-top-row
            :buffer-status
            :buffer-lines
+           :buffer-visible-lines
            :buffer-content
            :set-buffer-content
            :redraw-buffer
@@ -370,8 +371,10 @@
                                buffer)
     (when (and (> (buffer-x buffer) 0)
                (< (buffer-x buffer) (buffer-x-max buffer)))
-      (decf (buffer-x buffer)))
+      (decf (buffer-x buffer))
+      (redraw-buffer))
     t))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; replace
