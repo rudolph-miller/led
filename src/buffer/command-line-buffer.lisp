@@ -92,6 +92,7 @@
                   (:insert "-- INSERT --")
                   (:command-line ":"))))
     (on-command-line string)
+    (setf (buffer-x *command-line-buffer*) 0)
     (when (eq mode :command-line)
       (setf (buffer-x *command-line-buffer*) 1)
       (focus-on-command-line))

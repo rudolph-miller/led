@@ -73,7 +73,7 @@
           do (typecase got
                (cons (setq contexts (current-mappings got)))
                (null (setq contexts (current-mappings)))
-               (otherwise (funcall got))))))
+               (otherwise (funcall got) (setq contexts (current-mappings)))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

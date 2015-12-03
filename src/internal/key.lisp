@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; globals
 
-(defvar *global-key-mapping* (make-hash-table :test #'equal))
+(defvar *global-key-mapping* nil)
 
 (defvar *mapping-namespaces* (make-hash-table :test #'equal))
 

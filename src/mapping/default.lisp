@@ -7,7 +7,20 @@
   (:export))
 (in-package :led.mapping.default)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; cursor
+
 (global-set-key :normal "k" 'cursor-up)
 (global-set-key :normal "j" 'cursor-down)
 (global-set-key :normal "h" 'cursor-left)
 (global-set-key :normal "l" 'cursor-right)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; mode
+
+(global-set-key :normal "i" 'insert-mode)
+(global-set-key :normal "a" 'insert-mode-and-cursor-right)
+(global-set-key :insert "<Esc>" 'normal-mode-and-cursor-left)
+(global-set-key :command-line "<Esc>" 'normal-mode)
