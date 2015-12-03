@@ -3,6 +3,5 @@
   (:use :led.mapping.util
         :led.mapping.default)
   (:export ;; util
-           :global-set-key
-           :define-key))
+           :global-set-key))
 (in-package :led.mapping)

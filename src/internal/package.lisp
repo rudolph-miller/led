@@ -3,6 +3,7 @@
   (:use :led.internal.character
         :led.internal.line
         :led.internal.string
+        :led.internal.mode
         :led.internal.key)
   (:export ;; character
            :ichar

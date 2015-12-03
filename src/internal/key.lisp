@@ -1,6 +1,7 @@
 (in-package :cl-user)
 (defpackage led.internal.key
-  (:use :cl)
+  (:use :cl
+        :led.internal.mode)
   (:export :*global-key-mapping*
            :get-namespace
            :create-namespace
@@ -12,11 +13,27 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; globals
 
-(defparameter *global-key-mapping* (make-hash-table :test #'equal))
+(defvar *global-key-mapping* (make-hash-table :test #'equal))
 
-(defparameter *mapping-namespaces* (make-hash-table :test #'equal))
+(defvar *mapping-namespaces* (make-hash-table :test #'equal))
 
-(defparameter *char-dsl* nil)
+(defvar *char-dsl* nil)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; initialize-mapping
+
+(defun new-mapping ()
+  (flet ((make-hash ()
+           (make-hash-table :test #'equal)))
+    (let ((hash (make-hash)))
+      (dolist (mode *modes*)
+        (setf (gethash mode hash) (make-hash)))
+      hash)))
+
+(unless *global-key-mapping*
+  (setq *global-key-mapping* (new-mapping)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; char-dsl and dsl-char
@@ -79,7 +96,7 @@
 
 (defun create-namespace (name)
   (unless (get-namespace name)
-  (setf (gethash name *mapping-namespaces*) (make-hash-table :test #'equal))))
+  (setf (gethash name *mapping-namespaces*) (new-mapping))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -99,13 +116,17 @@
         collecting dsl-char
         while (< position length)))
 
-(defun register-key (dsl target &optional (mapping *global-key-mapping*) (force nil))
+(defun register-key (mode dsl target
+                     &optional
+                       (mapping *global-key-mapping*)
+                       (force nil))
+  (assert (member mode *modes*))
   (let ((chars (parse-dsl dsl)))
     (loop for char in chars
           with last-position = (1- (length chars))
           for position from 0
           for last-p = (= position last-position)
-          with prev = mapping
+          with prev = (gethash mode mapping)
           for got = (gethash char prev)
           if last-p
             do (cond
@@ -116,9 +137,7 @@
                       (error "Key Conflict")))
                  ((null target)
                   (remhash char prev))
-                 ((or (typep target 'function)
-                      (typep target 'symbol))
-                  (setf (gethash char prev) target)))
+                 (t (setf (gethash char prev) target)))
           else
             do (setq prev
                      (etypecase got
@@ -129,5 +148,5 @@
                                      (error "Key Conflict")))
                        (hash-table got))))))
 
-(defun unregister-key (dsl &optional (mapping *global-key-mapping*))
-  (register-key dsl nil mapping t))
+(defun unregister-key (mode dsl &optional (mapping *global-key-mapping*))
+  (register-key mode dsl nil mapping t))

@@ -7,7 +7,7 @@
   (:export))
 (in-package :led.mapping.default)
 
-(global-set-key "k" 'cursor-up)
-(global-set-key "j" 'cursor-down)
-(global-set-key "h" 'cursor-left)
-(global-set-key "l" 'cursor-right)
+(global-set-key :normal "k" 'cursor-up)
+(global-set-key :normal "j" 'cursor-down)
+(global-set-key :normal "h" 'cursor-left)
+(global-set-key :normal "l" 'cursor-right)

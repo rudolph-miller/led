@@ -2,14 +2,9 @@
 (defpackage led.mapping.util
   (:use :cl
         :led.internal)
-  (:export :global-set-key
-           :define-key))
+  (:export :global-set-key))
 (in-package :led.mapping.util)
 
-(defun global-set-key (dsl function)
-  (register-key dsl function *global-key-mapping* t)
-  function)
-
-(defun define-key (mapping dsl function)
-  (register-key dsl function mapping t)
+(defun global-set-key (mode dsl function)
+  (register-key mode dsl function *global-key-mapping* t)
   function)
