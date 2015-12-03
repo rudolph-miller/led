@@ -95,8 +95,9 @@
 
 (defun buffer-window-cursor-position (buffer)
   (assert (buffer-visible-lines buffer))
-  (let ((x (buffer-x buffer))
-        (y (- (buffer-y buffer) (buffer-top-row buffer))))
+  (let ((x (+ (buffer-position-x buffer) (buffer-x buffer)))
+        (y (+ (buffer-position-y buffer)
+              (- (buffer-y buffer) (buffer-top-row buffer)))))
     (loop for line across (buffer-visible-lines buffer)
           for index from 0
           while (< index y)
@@ -224,8 +225,9 @@
                                            window
                                            (1- (buffer-height buffer))
                                            win-col-start win-col-end)))
-      (setf (window-x window) x)
-      (setf (window-y window) y))))
+      (when (eq buffer *current-buffer*)
+        (setf (window-x window) x)
+        (setf (window-y window) y)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -303,7 +305,7 @@
          (incf (buffer-y buffer)) t)
         ((and (next-line buffer)
               (< (buffer-y buffer) (buffer-visible-line-max buffer))
-         (incf (buffer-y buffer)) t))
+              (incf (buffer-y buffer)) t))
         (t nil))
     (normalize-x buffer)
     (redraw-buffer buffer)))

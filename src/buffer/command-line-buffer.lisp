@@ -18,6 +18,8 @@
 
 (defvar *command-line-buffer-height* 1)
 
+(defvar *previous-buffer* nil)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; command-line-buffer
@@ -63,3 +65,39 @@
   (assert *command-line-buffer*)
   (set-buffer-content content *command-line-buffer*)
   (redraw-buffer *command-line-buffer*))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; focus
+
+(defun focus-on-command-line ()
+  (setq *previous-buffer* *current-buffer*)
+  (setq *current-buffer* *command-line-buffer*)
+  (redraw-buffer)
+  t)
+
+(defun unfocus-on-command-line ()
+  (setq *current-buffer* *previous-buffer*)
+  (setq *previous-buffer* nil)
+  (redraw-buffer)
+  t)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; *mode-changed-hooks*
+
+(defun mode-on-command-line (mode prev)
+  (let ((string (ecase mode
+                  (:normal "")
+                  (:insert "-- INSERT --")
+                  (:command-line ":"))))
+    (on-command-line string)
+    (when (eq mode :command-line)
+      (setf (buffer-x *command-line-buffer*) 1)
+      (focus-on-command-line))
+    (when (and (eq prev :command-line)
+               (not (eq mode :command-line)))
+      (unfocus-on-command-line))))
+
+(unless (member 'mode-on-command-line *mode-changed-hooks*)
+  (push 'mode-on-command-line *mode-changed-hooks*))
