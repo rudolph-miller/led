@@ -56,8 +56,9 @@
 (defun fn-or-next-contexts (char contexts)
   (loop for context in contexts
         for got = (gethash char context)
-        when (or (typep got 'function)
-                 (typep got 'symbol))
+        when (and got
+                  (or (typep got 'function)
+                      (typep got 'symbol)))
           do (return got)
         when (typep got 'hash-table)
           collecting got))
