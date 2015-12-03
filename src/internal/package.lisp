@@ -25,6 +25,8 @@
            ;; mode
            :*modes*
            :*current-mode*
+           :*mode-changed-hooks*
+           :current-mode
 
            ;; key
            :*global-key-mapping*

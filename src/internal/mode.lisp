@@ -2,7 +2,9 @@
 (defpackage led.internal.mode
   (:use :cl)
   (:export :*modes*
-           :*current-mode*))
+           :*current-mode*
+           :*mode-changed-hooks*
+           :current-mode))
 (in-package :led.internal.mode)
 
 
@@ -12,3 +14,20 @@
 (defvar *modes* (list :normal :insert :command-line))
 
 (defvar *current-mode* :normal)
+
+(defvar *mode-changed-hooks* nil)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; current-mode
+
+(defun current-mode ()
+  *current-mode*)
+
+(defun (setf current-mode) (mode)
+  (assert (member mode *modes*))
+  (setq *current-mode* mode)
+  (dolist (fn *mode-changed-hooks*)
+    (funcall fn mode))
+  t)
+
