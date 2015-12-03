@@ -8,7 +8,8 @@
            :normal-mode-and-cursor-left
            :insert-mode
            :insert-mode-and-cursor-right
-           :command-line-mode))
+           :command-line-mode
+           :exit-command-line-mode))
 (in-package :led.mapping.util)
 
 
@@ -43,3 +44,9 @@
 
 (defun command-line-mode ()
   (setf (current-mode) :command-line))
+
+(defun exit-command-line-mode ()
+  (stop-command-line-mode)
+  (on-command-line "Quit")
+  (normal-mode)
+  (redraw-buffer))

@@ -24,7 +24,6 @@
 (global-set-key :normal "a" 'insert-mode-and-cursor-right)
 (global-set-key :insert "<Esc>" 'normal-mode-and-cursor-left)
 (global-set-key :insert "<C-j>" 'normal-mode-and-cursor-left)
-(global-set-key :command-line "<Esc>" 'normal-mode)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -88,3 +87,10 @@
 (global-set-key :normal "<DEL>" 'delete-ichar)
 (global-set-key :insert "<C-h>" 'delete-prev-ichar)
 (global-set-key :insert "<BS>" 'delete-prev-ichar)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; command-line
+
+(global-set-key :normal ":" 'command-line-mode)
+(global-set-key :command-line "<Esc>" 'exit-command-line-mode)

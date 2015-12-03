@@ -12,9 +12,17 @@
   (:import-from :bordeaux-threads
                 :make-thread
                 :destroy-thread)
-  (:export :start-input-loop
+  (:export :*stop-input-loop*
+           :input-loop
+           :start-input-loop
            :stop-input-loop))
 (in-package :led.window.input)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; globals
+
+(defvar *stop-input-loop* nil)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -73,7 +81,9 @@
           do (typecase got
                (cons (setq contexts (current-mappings got)))
                (null (setq contexts (current-mappings)))
-               (otherwise (funcall got) (setq contexts (current-mappings)))))))
+               (otherwise (funcall got) (setq contexts (current-mappings))))
+          finally (setq *stop-input-loop* nil)
+          until *stop-input-loop*)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
