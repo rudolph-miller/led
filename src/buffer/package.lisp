@@ -1,7 +1,8 @@
 (in-package :cl-user)
 (defpackage :led.buffer
   (:use :led.buffer.buffer
-        :led.buffer.file-buffer)
+        :led.buffer.file-buffer
+        :led.buffer.command-line-buffer)
   (:export ;; buffer
            :*current-buffer*
            :*buffers*
@@ -30,4 +31,7 @@
            :write-buffer-to-file
 
            ;; command-line-buffer
-           ))
+           :*command-line-buffer*
+           :*command-line-buffer-height*
+           :command-line-buffer
+           :on-command-line))
