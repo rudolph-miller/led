@@ -26,8 +26,9 @@
 
 (defun (setf current-mode) (mode)
   (assert (member mode *modes*))
-  (setq *current-mode* mode)
-  (dolist (fn *mode-changed-hooks*)
-    (funcall fn mode))
-  t)
+  (let ((prev *current-mode*))
+    (setq *current-mode* mode)
+    (dolist (fn *mode-changed-hooks*)
+      (funcall fn mode prev))
+    t))
 
