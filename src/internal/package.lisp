@@ -31,6 +31,8 @@
 
            ;; key
            :*global-key-mapping*
+           :char-dsl
+           :dsl-char
            :get-namespace
            :create-namespace
            :register-key

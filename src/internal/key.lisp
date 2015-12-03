@@ -3,6 +3,8 @@
   (:use :cl
         :led.internal.mode)
   (:export :*global-key-mapping*
+           :char-dsl
+           :dsl-char
            :get-namespace
            :create-namespace
            :register-key

@@ -75,8 +75,9 @@
   (flet ((current-mappings (&optional mappings)
            (append mappings
                    (list (gethash *current-mode* *global-key-mapping*)))))
-    (loop for char = (get-char)
+    (loop with *stop-input-loop* = nil
           with contexts = (current-mappings)
+          for char = (get-char)
           for got = (fn-or-next-contexts char contexts)
           do (typecase got
                (cons (setq contexts (current-mappings got)))

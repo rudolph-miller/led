@@ -47,6 +47,4 @@
 
 (defun exit-command-line-mode ()
   (stop-command-line-mode)
-  (on-command-line "Quit")
-  (normal-mode)
-  (redraw-buffer))
+  (on-command-line "Quit"))
