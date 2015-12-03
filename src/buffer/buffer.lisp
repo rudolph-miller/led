@@ -59,7 +59,7 @@
           :initform (window-width *window*))
    (height :accessor buffer-height
            :initarg :height
-           :initform (window-height *window*))
+           :initform (1- (window-height *window*)))
    (x :accessor buffer-x
       :initform 0)
    (y :accessor buffer-y
@@ -303,10 +303,10 @@
          (incf (buffer-y buffer)) t)
         ((and (next-line buffer)
               (< (buffer-y buffer) (buffer-visible-line-max buffer))
-         (incf (buffer-y buffer)) t)
+         (incf (buffer-y buffer)) t))
         (t nil))
     (normalize-x buffer)
-    (redraw-buffer buffer))))
+    (redraw-buffer buffer)))
 
 (defun cursor-left (&optional (buffer *current-buffer*))
   (when (> (buffer-x buffer) 0)
