@@ -64,14 +64,16 @@
           collecting got))
 
 (defun input-loop ()
-  (loop for char = (get-char)
-        with contexts = (list *global-key-mapping*)
-        for got = (fn-or-next-contexts char contexts)
-        do (etypecase got
-             (cons (setq contexts got))
-             (function (funcall got))
-             (symbol (funcall got))
-             (null (setq contexts (list *global-key-mapping*))))))
+  (flet ((current-mappings (&optional mappings)
+           (append mappings
+                   (list (gethash *current-mode* *global-key-mapping*)))))
+    (loop for char = (get-char)
+          with contexts = (current-mappings)
+          for got = (fn-or-next-contexts char contexts)
+          do (typecase got
+               (cons (setq contexts (current-mappings got)))
+               (null (setq contexts (current-mappings)))
+               (otherwise (funcall got))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
