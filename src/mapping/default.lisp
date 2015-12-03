@@ -30,7 +30,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; insert-char
 
-
 (defun make-insert-ichar-fn (char)
   (lambda ()
     (insert-ichar (character-to-ichar char))

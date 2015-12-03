@@ -246,28 +246,30 @@
   (+ (buffer-top-row buffer)
      (1- (length (buffer-visible-lines buffer)))))
 
-(defun normalize-x (buffer)
+(defun buffer-x-max (buffer)
   (let* ((lines (buffer-lines buffer))
-         (current-line-length (if (zerop (length lines))
-                                  0
-                                  (line-length
-                                   (aref (buffer-lines buffer)
-                                         (buffer-y buffer))))))
-    (if (zerop current-line-length)
-        (setf (buffer-x buffer) 0)
-        (setf (buffer-x buffer)
-              (min (buffer-x buffer) (1- current-line-length))))))
+         (current-line (aref lines (buffer-y buffer)))
+         (current-line-length (line-length current-line)))
+    (cond
+      ((or (zerop current-line-length)
+            (zerop (length lines)))
+        0)
+      ((eq (current-mode) :insert)
+       current-line-length)
+      (t (1- current-line-length)))))
+
+(defun normalize-x (buffer)
+  (setf (buffer-x buffer)
+        (min (buffer-x buffer) (buffer-x-max buffer))))
 
 (defun normalize-y (buffer)
-  (let ((max (buffer-visible-line-max buffer)))
-    (when (> (buffer-y buffer) max)
-      (setf (buffer-y buffer) max))))
+  (setf (buffer-y buffer)
+        (min (buffer-y buffer) (buffer-visible-line-max buffer))))
 
 (defun prev-line (&optional (buffer *current-buffer*))
   (when (> (buffer-top-row buffer) 0)
-    (when (= (buffer-y buffer)
-             (+ (buffer-top-row buffer)
-                (- (buffer-height-without-status-line buffer) 2)))
+    (when (>= (buffer-y buffer)
+              (buffer-visible-line-max buffer))
       (decf (buffer-y buffer)))
     (decf (buffer-top-row buffer))
     (normalize-x buffer)
@@ -277,7 +279,7 @@
   (when (< (buffer-top-row buffer)
            (- (length (buffer-lines buffer))
               (buffer-height buffer)))
-    (when (= (buffer-y buffer)
+    (when (<= (buffer-y buffer)
              (buffer-top-row buffer))
       (incf (buffer-y buffer)))
     (incf (buffer-top-row buffer))
@@ -304,8 +306,8 @@
         ((< (buffer-y buffer) (buffer-visible-line-max buffer))
          (incf (buffer-y buffer)) t)
         ((and (next-line buffer)
-              (< (buffer-y buffer) (buffer-visible-line-max buffer))
-              (incf (buffer-y buffer)) t))
+              (< (buffer-y buffer) (buffer-visible-line-max buffer)))
+         (incf (buffer-y buffer)) t)
         (t nil))
     (normalize-x buffer)
     (redraw-buffer buffer)))
@@ -316,11 +318,10 @@
     (redraw-buffer buffer)))
 
 (defun cursor-right (&optional (buffer *current-buffer*))
-  (let* ((lines (buffer-lines buffer))
-         (current-line (aref lines (buffer-y buffer))))
-    (when (< (buffer-x buffer) (1- (line-length current-line)))
-      (incf (buffer-x buffer))
-      (redraw-buffer buffer))))
+  (when (< (buffer-x buffer)
+           (buffer-x-max buffer))
+    (incf (buffer-x buffer))
+    (redraw-buffer buffer)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -397,4 +398,3 @@
 
 (defun insert-ichar (ichar &optional (buffer *current-buffer*))
   (insert-ichar-at-point ichar (buffer-x buffer) (buffer-y buffer) buffer))
-
