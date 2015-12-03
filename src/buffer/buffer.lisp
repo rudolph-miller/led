@@ -246,7 +246,9 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; buffer controllers
+;; cursor
+
+;; FIXME: ugly
 
 (defun buffer-visible-line-max (buffer)
   (+ (buffer-top-row buffer)
