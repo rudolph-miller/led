@@ -28,6 +28,8 @@
            :delete-line
            :delete-ichar-at-point
            :delete-ichar
+           :replace-ichar-at-point
+           :replace-ichar
            :insert-new-line-at-point
            :insert-new-line
            :insert-next-line
@@ -362,6 +364,24 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; replace
+
+(defun ensure-buffer-has-more-than-one-lines (buffer)
+  (when (zerop (length (buffer-lines buffer)))
+    (setf (buffer-lines buffer) (vector (make-line :eol-p t)))))
+
+(defun replace-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
+  (ensure-buffer-has-more-than-one-lines buffer)
+  (let* ((line (aref (buffer-lines buffer) y))
+         (ichars (line-ichars line)))
+    (setf (aref ichars x) ichar)
+    (redraw-buffer buffer)))
+
+(defun replace-ichar (ichar &optional (buffer *current-buffer*))
+  (replace-ichar-at-point ichar (buffer-x buffer) (buffer-y buffer) buffer))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; insert
 
 (defun insert-new-line-at-point (y &optional (buffer *current-buffer*))
@@ -384,8 +404,7 @@
   (insert-new-line-at-point (1+ (buffer-y buffer)) buffer))
 
 (defun insert-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
-  (when (zerop (length (buffer-lines buffer)))
-    (setf (buffer-lines buffer) (vector (make-line :eol-p t))))
+  (ensure-buffer-has-more-than-one-lines buffer)
   (let* ((line (aref (buffer-lines buffer) y))
          (ichars (line-ichars line)))
     (setf (line-ichars line)

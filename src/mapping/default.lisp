@@ -30,11 +30,30 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; insert-char
 
-(defun make-insert-ichar-fn (char)
+(defun make-insert-char-fn (char)
   (lambda ()
     (insert-ichar (character-to-ichar char))
     (cursor-right)))
 
+(defmacro set-insert-char-key (char)
+  `(global-set-key :insert (string ,char) (make-insert-char-fn ,char)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; replace-char
+
+(defun make-replace-char-fn (char)
+  (lambda ()
+    (replace-ichar (character-to-ichar char))))
+
+(defmacro set-replace-char-key (char)
+  `(global-set-key :normal (format nil "r~a" ,char) (make-replace-char-fn ,char)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; set loop
+
 (loop for code from (char-code #\!) to (char-code #\~)
       for char = (code-char code)
-      do (global-set-key :insert (string char) (make-insert-ichar-fn char)))
+      do (set-insert-char-key char)
+         (set-replace-char-key char))

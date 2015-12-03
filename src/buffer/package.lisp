@@ -20,6 +20,8 @@
            :delete-line
            :delete-ichar-at-point
            :delete-ichar
+           :replace-ichar-at-point
+           :replace-ichar
            :insert-new-line-at-point
            :insert-new-line
            :insert-next-line
