@@ -20,6 +20,7 @@
            :delete-line
            :delete-ichar-at-point
            :delete-ichar
+           :delete-prev-ichar
            :replace-ichar-at-point
            :replace-ichar
            :insert-new-line-at-point
@@ -27,6 +28,8 @@
            :insert-next-line
            :insert-ichar-at-point
            :insert-ichar
+           :insert-eol-at-point
+           :insert-eol
 
            ;; file-buffer
            :file-buffer

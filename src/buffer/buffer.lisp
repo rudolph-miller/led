@@ -35,7 +35,9 @@
            :insert-new-line
            :insert-next-line
            :insert-ichar-at-point
-           :insert-ichar))
+           :insert-ichar
+           :insert-eol-at-point
+           :insert-eol))
 (in-package :led.buffer.buffer)
 
 
@@ -387,10 +389,8 @@
 ;; insert
 
 (defun insert-new-line-at-point (y &optional (buffer *current-buffer*))
+  (ensure-buffer-has-more-than-one-lines buffer)
   (let ((lines (buffer-lines buffer)))
-    (when (zerop (length lines))
-      (setf lines
-            (vector (make-line :eol-p t))))
     (setf (buffer-lines buffer)
           (concatenate 'vector
                        (subseq lines 0 y)
@@ -420,3 +420,21 @@
 
 (defun insert-ichar (ichar &optional (buffer *current-buffer*))
   (insert-ichar-at-point ichar (buffer-x buffer) (buffer-y buffer) buffer))
+
+(defun insert-eol-at-point (x y &optional (buffer *current-buffer*))
+  (ensure-buffer-has-more-than-one-lines buffer)
+  (let* ((lines (buffer-lines buffer))
+         (ichars (line-ichars (aref lines y))))
+    (setf (buffer-lines buffer)
+          (concatenate 'vector
+                       (subseq lines 0 y)
+                       (list (make-line :ichars (subseq ichars 0 x) :eol-p t)
+                             (make-line :ichars (subseq ichars x) :eol-p t))
+                       (subseq lines (1+ y))))
+    (incf (buffer-y buffer))
+    (setf (buffer-x buffer) 0)
+    (redraw-buffer)
+    t))
+
+(defun insert-eol (&optional (buffer *current-buffer*))
+  (insert-eol-at-point (buffer-x buffer) (buffer-y buffer) buffer))
