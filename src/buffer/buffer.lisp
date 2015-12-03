@@ -250,14 +250,13 @@
 
 (defun buffer-x-max (buffer)
   (let* ((lines (buffer-lines buffer))
-         (current-line (aref lines (buffer-y buffer)))
-         (current-line-length (line-length current-line)))
+         (current-line-length
+           (if (zerop (length lines))
+               0
+               (line-length (aref lines (buffer-y buffer))))))
     (cond
-      ((or (zerop current-line-length)
-            (zerop (length lines)))
-        0)
-      ((eq (current-mode) :insert)
-       current-line-length)
+      ((zerop current-line-length) 0)
+      ((eq (current-mode) :insert) current-line-length)
       (t (1- current-line-length)))))
 
 (defun normalize-x (buffer)

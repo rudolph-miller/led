@@ -72,3 +72,10 @@
 
 (global-set-key :normal "o" 'insert-next-line-and-cursor-down-and-insert-mode)
 (global-set-key :normal "O" 'insert-new-line-and-insert-mode)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; delete
+
+(global-set-key :normal "dd" 'delete-line)
+(global-set-key :normal "x" 'delete-ichar)
