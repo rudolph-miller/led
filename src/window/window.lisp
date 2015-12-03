@@ -20,6 +20,7 @@
                 :clear-window
                 :finalize)
   (:export :*window*
+           :*escape-delay*
            :make-window
            :window-width
            :window-height
@@ -36,6 +37,8 @@
 ;; global parameters
 
 (defvar *window* nil)
+
+(defvar *escape-delay* 10)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -77,7 +80,7 @@
         (enable-extra-keys (window-entity window))
         (initialize-window-dimensions window)
         (initialize-window-lines window)
-        (setq *escdelay* 10)
+        (setq *escdelay* *escape-delay*)
         (setq *window* window))))
 
 
