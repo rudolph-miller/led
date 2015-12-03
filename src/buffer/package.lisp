@@ -40,6 +40,5 @@
            :*command-line-buffer-height*
            :command-line-buffer
            :stop-command-line-mode
-           :append-char-to-current-command
-           :exec-current-command
+           :exec-command
            :on-command-line))

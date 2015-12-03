@@ -10,8 +10,7 @@
            :*exec-command-package*
            :command-line-buffer
            :stop-command-line-mode
-           :append-char-to-current-command
-           :exec-current-command
+           :exec-command
            :on-command-line))
 (in-package :led.buffer.command-line-buffer)
 
@@ -23,11 +22,11 @@
 
 (defvar *command-line-buffer-height* 1)
 
-(defvar *current-command* nil)
-
 (defvar *raw-command-input* nil)
 
 (defvar *exec-command-package* :led)
+
+(defvar *exec-command-and-args* nil)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -80,12 +79,23 @@
 ;; start-command-line-mode
 
 (defun start-command-line-mode ()
-  (let ((*current-buffer* *command-line-buffer*))
-    (setf (buffer-x *command-line-buffer*) 1)
-    (on-command-line ":")
-    (input-loop))
-  (setf (current-mode) :normal)
-  (redraw-buffer))
+  (unwind-protect
+       (let ((*current-buffer* *command-line-buffer*))
+         (setf (buffer-x *command-line-buffer*) 1)
+         (setq *exec-command-and-args* nil)
+         (on-command-line ":")
+         (input-loop))
+    (let ((symbol (and *exec-command-and-args*
+                       (find-symbol (car *exec-command-and-args*)
+                                    *exec-command-package*))))
+      (if (and symbol (symbol-function symbol))
+          (if (cdr *exec-command-and-args*)
+              (apply symbol (cdr *exec-command-and-args*))
+              (funcall symbol))
+          (on-command-line "Unknown Command")))
+    (setq *exec-command-and-args* nil)
+    (setf (current-mode) :normal)
+    (redraw-buffer)))
 
 (defun detect-start-command-line-mode (next prev)
   (declare (ignore prev))
@@ -103,23 +113,18 @@
   (assert (eq (current-mode) :command-line))
   (setq *stop-input-loop* t))
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; current-command
+;; exec-command
 
-(defun append-char-to-current-command (char)
-  (setq *current-command*
-        (format nil "~a~a" *current-command* char)))
-
-(defun exec-current-command (&optional args)
-  (let ((symbol (find-symbol (if *raw-command-input*
-                                 *current-command*
-                                 (string-upcase *current-command*))
-                             *exec-command-package*)))
-    (if (and symbol (symbol-function symbol))
-        (if args
-            (apply symbol args)
-            (funcall symbol))
-        (on-command-line "Unknown Command"))))
+(defun exec-command (&optional args)
+  (let ((command (string-trim (list #\NewLine)
+                              (subseq (buffer-content *command-line-buffer*) 1))))
+    (when (not *raw-command-input*)
+      (setq command (string-upcase command)))
+    (setq *exec-command-and-args*
+          (cons command args))
+    (stop-command-line-mode)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

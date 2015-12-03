@@ -86,6 +86,7 @@
 
 (global-set-key :normal ":" 'command-line-mode)
 (global-set-key :command-line "<Esc>" 'exit-command-line-mode)
+(global-set-key :command-line "<CR>" 'exec-current-command)
 
 (defun make-insert-char-to-command-line-fn (char)
   (lambda ()
@@ -99,7 +100,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; set loop
+;; set characters loop
 
 (loop for code from (char-code #\!) to (char-code #\~)
       for char = (code-char code)
