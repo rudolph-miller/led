@@ -4,7 +4,8 @@
         :led.internal)
   (:import-from :charms/ll
                 :wattron
-                :wattroff)
+                :wattroff
+                :*escdelay*)
   (:import-from :charms
                 :initialize
                 :standard-window
@@ -76,6 +77,7 @@
         (enable-extra-keys (window-entity window))
         (initialize-window-dimensions window)
         (initialize-window-lines window)
+        (setq *escdelay* 10)
         (setq *window* window))))
 
 
