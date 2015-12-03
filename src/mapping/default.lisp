@@ -50,14 +50,6 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; set loop
-
-(loop for code from (char-code #\!) to (char-code #\~)
-      for char = (code-char code)
-      do (set-insert-char-key char)
-         (set-replace-char-key char))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; insert-new-line
 
 (defun insert-next-line-and-cursor-down-and-insert-mode ()
@@ -94,3 +86,23 @@
 
 (global-set-key :normal ":" 'command-line-mode)
 (global-set-key :command-line "<Esc>" 'exit-command-line-mode)
+
+(defun make-insert-char-to-command-line-fn (char)
+  (lambda ()
+    (append-char-to-current-command char)
+    (cursor-right)))
+
+(defmacro set-insert-char-to-command-line-key (char)
+  `(global-set-key :command-line
+                   (string ,char)
+                   (make-insert-char-to-command-line-fn ,char)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; set loop
+
+(loop for code from (char-code #\!) to (char-code #\~)
+      for char = (code-char code)
+      do (set-insert-char-key char)
+         (set-replace-char-key char)
+         (set-insert-char-to-command-line-key char))

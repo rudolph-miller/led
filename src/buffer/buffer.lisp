@@ -262,7 +262,9 @@
                (line-length (aref lines (buffer-y buffer))))))
     (cond
       ((zerop current-line-length) 0)
-      ((eq (current-mode) :insert) current-line-length)
+      ((or (eq (current-mode) :insert)
+           (eq (current-mode) :command-line))
+           current-line-length)
       (t (1- current-line-length)))))
 
 (defun normalize-x (buffer)
