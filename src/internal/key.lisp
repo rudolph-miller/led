@@ -85,7 +85,17 @@
 (register-dsl 25 "<C-y>")
 (register-dsl 26 "<C-z>")
 (register-dsl 27 "<Esc>")
-(register-dsl 127 "[del]")
+(register-dsl 127 "<DEL>")
+(register-dsl 258 "<Down>")
+(register-dsl 259 "<Up>")
+(register-dsl 260 "<Legt>")
+(register-dsl 261 "<Right>")
+(register-dsl 525 "<C-Down>")
+(register-dsl 566 "<C-Up>")
+(register-dsl 545 "<C-Left>")
+(register-dsl 560 "<C-Right>")
+(register-dsl 262 "<Home>")
+(register-dsl 263 "<BS>")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
