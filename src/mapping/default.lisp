@@ -9,6 +9,11 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; globals
+
+(defvar *character-loop-functions* nil)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; cursor
 
 (global-set-key :normal "k" 'cursor-up)
@@ -34,8 +39,9 @@
     (insert-ichar (character-to-ichar char))
     (cursor-right)))
 
-(defmacro set-insert-char-key (char)
-  `(global-set-key :insert (string ,char) (make-insert-char-fn ,char)))
+(push (lambda (char dsl)
+        (global-set-key :insert dsl (make-insert-char-fn char)))
+      *character-loop-functions*)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -45,8 +51,9 @@
   (lambda ()
     (replace-ichar (character-to-ichar char))))
 
-(defmacro set-replace-char-key (char)
-  `(global-set-key :normal (format nil "r~a" ,char) (make-replace-char-fn ,char)))
+(push (lambda (char dsl)
+        (global-set-key :normal (format nil "r~a" dsl) (make-replace-char-fn char)))
+      *character-loop-functions*)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -86,24 +93,18 @@
 
 (global-set-key :normal ":" 'command-line-mode)
 (global-set-key :command-line "<Esc>" 'exit-command-line-mode)
-(global-set-key :command-line "<CR>" 'exec-current-command)
+(global-set-key :command-line "<CR>" 'exec-command)
 
-(defun make-insert-char-to-command-line-fn (char)
-  (lambda ()
-    (append-char-to-current-command char)
-    (cursor-right)))
-
-(defmacro set-insert-char-to-command-line-key (char)
-  `(global-set-key :command-line
-                   (string ,char)
-                   (make-insert-char-to-command-line-fn ,char)))
+(push (lambda (char dsl)
+        (global-set-key :command-line dsl (make-insert-char-fn char)))
+      *character-loop-functions*)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; set characters loop
 
-(loop for code from (char-code #\!) to (char-code #\~)
-      for char = (code-char code)
-      do (set-insert-char-key char)
-         (set-replace-char-key char)
-         (set-insert-char-to-command-line-key char))
+(dolist (fn *character-loop-functions*)
+  (loop for code from (char-code #\Space) to (char-code #\~)
+        for char = (code-char code)
+        for dsl = (char-dsl char)
+        do (funcall fn char dsl)))

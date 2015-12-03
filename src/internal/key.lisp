@@ -85,6 +85,7 @@
 (register-dsl 25 "<C-y>")
 (register-dsl 26 "<C-z>")
 (register-dsl 27 "<Esc>")
+(register-dsl 32 "<Space>")
 (register-dsl 127 "<DEL>")
 (register-dsl 258 "<Down>")
 (register-dsl 259 "<Up>")
