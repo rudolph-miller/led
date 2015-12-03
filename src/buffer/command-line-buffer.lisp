@@ -5,6 +5,7 @@
         :led.window
         :led.buffer.buffer)
   (:export :*command-line-buffer*
+           :*command-line-buffer-height*
            :command-line-buffer
            :on-command-line))
 (in-package :led.buffer.command-line-buffer)
