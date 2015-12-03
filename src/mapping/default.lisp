@@ -4,7 +4,7 @@
         :led.internal
         :led.buffer
         :led.mapping.util)
-  (:export))
+ (:export))
 (in-package :led.mapping.default)
 
 
@@ -40,7 +40,7 @@
     (cursor-right)))
 
 (push (lambda (char dsl)
-        (global-set-key :insert dsl (make-insert-char-fn char)))
+        (global-set-key '(:insert :command-line) dsl (make-insert-char-fn char)))
       *character-loop-functions*)
 
 
@@ -84,8 +84,8 @@
 (global-set-key :normal "dd" 'delete-line)
 (global-set-key :normal "x" 'delete-ichar)
 (global-set-key :normal "<DEL>" 'delete-ichar)
-(global-set-key :insert "<C-h>" 'delete-prev-ichar)
-(global-set-key :insert "<BS>" 'delete-prev-ichar)
+(global-set-key '(:command-line :insert) "<C-h>" 'delete-prev-ichar)
+(global-set-key '(:command-line :insert) "<BS>" 'delete-prev-ichar)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -94,10 +94,6 @@
 (global-set-key :normal ":" 'command-line-mode)
 (global-set-key :command-line "<Esc>" 'exit-command-line-mode)
 (global-set-key :command-line "<CR>" 'exec-command)
-
-(push (lambda (char dsl)
-        (global-set-key :command-line dsl (make-insert-char-fn char)))
-      *character-loop-functions*)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
