@@ -16,6 +16,7 @@
   :depends-on (:alexandria
                :cl-charms
                :babel
+               :split-sequence
                :bordeaux-threads)
   :components ((:module "src"
                 :serial t
@@ -49,6 +50,7 @@
                   ((:file "util")
                    (:file "default")
                    (:file "package")))
+                 (:file "command")
                  (:file "led"))))
   :description "[WIP] LED."
   :long-description

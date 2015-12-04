@@ -4,6 +4,8 @@
         :led.internal
         :led.window
         :led.buffer.buffer)
+  (:import-from :split-sequence
+                :split-sequence)
   (:export :*command-line-buffer*
            :*command-line-buffer-height*
            :*raw-command-input*
@@ -24,7 +26,7 @@
 
 (defvar *raw-command-input* nil)
 
-(defvar *exec-command-package* :led)
+(defvar *exec-command-package* :led.command)
 
 (defvar *exec-command-and-args* nil)
 
@@ -89,9 +91,11 @@
         (let ((symbol (find-symbol (car *exec-command-and-args*)
                                    *exec-command-package*)))
           (if (and symbol (symbol-function symbol))
-              (if (cdr *exec-command-and-args*)
-                  (apply symbol (cdr *exec-command-and-args*))
-                  (funcall symbol))
+              (handler-case (if (cdr *exec-command-and-args*)
+                                (apply symbol (cdr *exec-command-and-args*))
+                                (funcall symbol))
+                (error (e)
+                  (on-command-line (princ-to-string e))))
               (on-command-line "Unknown Command")))
         (on-command-line "Quit"))
     (setq *exec-command-and-args* nil)
@@ -118,13 +122,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; exec-command
 
-(defun exec-command (&optional args)
-  (let ((command (string-trim (list #\NewLine)
-                              (subseq (buffer-content *command-line-buffer*) 1))))
+(defun exec-command ()
+  (let* ((commands (split-sequence
+                    #\Space
+                    (string-trim (list #\NewLine)
+                                 (subseq (buffer-content *command-line-buffer*) 1))))
+         (command (car commands)))
     (when (not *raw-command-input*)
       (setq command (string-upcase command)))
     (setq *exec-command-and-args*
-          (cons command args))
+          (cons command (cdr commands)))
     (stop-command-line-mode)))
 
 
