@@ -36,7 +36,7 @@
         with pos = 0
         for line across lines
         do (loop for ichar across (line-ichars line)
-                 do (setf (elt result pos) (ichar-val ichar))
+                 do (setf (elt result pos) (ichar-char ichar))
                     (incf pos)
                  finally (when (line-eol-p line)
                            (setf (elt result pos) #\NewLine)

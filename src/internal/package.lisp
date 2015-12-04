@@ -7,9 +7,10 @@
         :led.internal.key)
   (:export ;; character
            :ichar
-           :ichar-val
+           :ichar-char
            :ichar-attr
            :character-to-ichar
+           :ichar-length
 
            ;; line
            :make-line

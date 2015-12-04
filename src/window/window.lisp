@@ -14,7 +14,7 @@
                 :enable-non-blocking-mode
                 :enable-extra-keys
                 :window-dimensions
-                :write-char-at-point
+                :write-string-at-point
                 :move-cursor
                 :refresh-window
                 :clear-window
@@ -108,9 +108,9 @@
   (ignore-right-bottom-error window x y
     (if (ichar-attr ichar)
         (progn (wattron (window-entity window) (ichar-attr ichar))
-               (write-char-at-point (window-entity window) (ichar-val ichar) x y)
+               (write-char-at-point (window-entity window) (ichar-char ichar) x y)
                (wattroff (window-entity window) (ichar-attr ichar)))
-        (write-char-at-point (window-entity window) (ichar-val ichar) x y))))
+        (write-string-at-point (window-entity window) (string (ichar-char ichar)) x y))))
 
 (defun window-write-lines (window)
   (loop with lines = (window-lines window)
