@@ -31,14 +31,14 @@
            :insert-eol-at-point
            :insert-eol
 
-           ;; file-buffer
-           :file-buffer
-           :write-buffer-to-file
-
            ;; command-line-buffer
            :*command-line-buffer*
            :*command-line-buffer-height*
            :command-line-buffer
            :stop-command-line-mode
            :exec-command
-           :on-command-line))
+           :on-command-line
+
+           ;; file-buffer
+           :file-buffer
+           :write-buffer-to-file))

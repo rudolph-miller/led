@@ -2,7 +2,8 @@
 (defpackage led.buffer.file-buffer
   (:use :cl
         :led.internal
-        :led.buffer.buffer)
+        :led.buffer.buffer
+        :led.buffer.command-line-buffer)
   (:export :file-buffer
            :write-buffer-to-file))
 (in-package :led.buffer.file-buffer)
@@ -40,8 +41,15 @@
 
 (defun write-buffer-to-file (&optional (buffer *current-buffer*))
   (check-type buffer file-buffer)
-  (with-open-file (stream (file-buffer-path buffer)
-                          :direction :output
-                          :if-exists :supersede
-                          :if-does-not-exist :create)
-    (write-string (buffer-content buffer) stream)))
+  (let ((path (file-buffer-path buffer))
+        (content (buffer-content buffer)))
+    (with-open-file (stream path
+                            :direction :output
+                            :if-exists :supersede
+                            :if-does-not-exist :create)
+      (write-string content stream)
+      (on-command-line (format nil
+                               "\"~a\" ~aL, ~aC written"
+                               (file-buffer-path buffer)
+                               (length (buffer-lines buffer))
+                               (length content))))))

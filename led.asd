@@ -41,8 +41,8 @@
                   :serial t
                   :components
                   ((:file "buffer")
-                   (:file "file-buffer")
                    (:file "command-line-buffer")
+                   (:file "file-buffer")
                    (:file "package")))
                  (:module "mapping"
                   :serial t

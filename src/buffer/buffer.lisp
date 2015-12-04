@@ -273,7 +273,8 @@
 
 (defun normalize-y (buffer)
   (setf (buffer-y buffer)
-        (min (buffer-y buffer) (buffer-visible-line-max buffer))))
+        (min (buffer-y buffer)
+             (buffer-visible-line-max buffer))))
 
 (defun prev-line (&optional (buffer *current-buffer*))
   (when (> (buffer-top-row buffer) 0)
@@ -343,6 +344,7 @@
             (concatenate 'vector
                          (subseq lines 0 y)
                          (subseq lines (1+ y))))
+      (redraw-buffer)
       (normalize-y buffer)
       (normalize-x buffer)
       (redraw-buffer)
