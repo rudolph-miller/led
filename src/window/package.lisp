@@ -16,6 +16,7 @@
 
            ;; input
            :*stop-input-loop*
+           :get-char
            :input-loop
            :start-input-loop
            :stop-input-loop))

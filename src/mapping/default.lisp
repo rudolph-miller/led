@@ -2,6 +2,7 @@
 (defpackage led.mapping.default
   (:use :cl
         :led.internal
+        :led.window
         :led.buffer
         :led.mapping.util)
  (:export))
@@ -47,13 +48,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; replace-char
 
-(defun make-replace-char-fn (char)
-  (lambda ()
+(defun replace-char ()
+  (let ((char (get-char)))
     (replace-ichar (character-to-ichar char))))
 
-(push (lambda (char dsl)
-        (global-set-key :normal (format nil "r~a" dsl) (make-replace-char-fn char)))
-      *character-loop-functions*)
+(global-set-key :normal "r" 'replace-char)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
