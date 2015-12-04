@@ -6,7 +6,8 @@
            :ichar-char
            :ichar-attr
            :character-to-ichar
-           :ichar-length))
+           :ichar-width
+           :ichars-width))
 (in-package :led.internal.character)
 
 
@@ -22,12 +23,22 @@
 ;; character-to-ichar
 
 (defun character-to-ichar (character)
-  (make-ichar :val character))
+  (make-ichar :char character))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ichar-length
+;; ichar-width
 
-(defun ichar-length (ichar)
+(defun ichar-width (ichar)
   (let ((char (ichar-char ichar)))
     (if (char<= char #\U+007F) 1 2)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ichars-width
+
+(defun ichars-width (ichars)
+  (loop with result = 0
+        for ichar across ichars
+        do (incf result (ichar-width ichar))
+        finally (return result)))

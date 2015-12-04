@@ -82,20 +82,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; fold
 
-(defun fold (sequence buffer)
+(defun fold-ichars (ichars buffer)
   (loop with max-line-width = (1- (buffer-width buffer))
-        with pos = 0
-        with seq-len = (length sequence)
-        for fold-p = (and max-line-width
-                          (> (- seq-len pos)
-                             max-line-width))
-        for content = (if fold-p
-                          (let ((end (+ pos max-line-width)))
-                            (prog1 (subseq sequence pos end)
-                              (setq pos end)))
-                          (subseq sequence pos))
-        collecting content
-        while fold-p))
+        with current-length = 0
+        for ichar across ichars
+        for ichar-width = (ichar-width ichar)
+        with start = 0
+        for position from 0
+        when (> (+ current-length ichar-width) max-line-width)
+          collecting (prog1 (subseq ichars start position)
+                       (setq current-length 0)
+                       (setq start position))
+            into result
+        do (incf current-length ichar-width)
+        finally (return
+                  (append result (list (subseq ichars start position))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -109,13 +110,21 @@
     (loop for line across (buffer-visible-lines buffer)
           for index from 0
           while (< index y)
-          do (loop repeat (length (fold (line-ichars line) buffer))
+          do (loop repeat (length (fold-ichars (line-ichars line) buffer))
                    for i = index
                      then (progn (when (> y i) (incf y))
                                  (incf index))))
-    (loop with max-line-width = (1- (buffer-width buffer))
-          while (>= x max-line-width)
-          do (decf x max-line-width)
+    (loop with lines = (buffer-lines buffer)
+          with icharss = (if (zerop (length lines))
+                             nil
+                             (fold-ichars (line-ichars
+                                           (aref (buffer-lines buffer)
+                                                 (- y (buffer-position-y buffer))))
+                                          buffer))
+          for (ichars cdr) on icharss
+          for length = (length ichars)
+          while cdr
+          do (decf x length)
              (incf y))
     (values x y)))
 
@@ -185,7 +194,7 @@
         for index from 0 below result-length
         for line = (aref lines y)
         collecting line into visible-lines
-        do (loop for ichars in (fold (line-ichars line) buffer)
+        do (loop for ichars in (fold-ichars (line-ichars line) buffer)
                  for i = index
                    then (incf index)
                  while (< i result-length)
@@ -208,8 +217,9 @@
 
 (defun buffer-status-line (buffer)
   (let* ((name (buffer-status buffer))
-         (line (when name (string-to-line (car (fold name buffer))))))
+         (line (when name (string-to-line name))))
     (when line
+      (setf (line-ichars line) (car (fold-ichars (line-ichars line) buffer)))
       (setf (line-eol-p line) t)
       line)))
 
@@ -271,7 +281,7 @@
       ((zerop current-line-length) 0)
       ((or (eq (current-mode) :insert)
            (eq (current-mode) :command-line))
-           current-line-length)
+       current-line-length)
       (t (1- current-line-length)))))
 
 (defun normalize-x (buffer)
@@ -297,7 +307,7 @@
            (- (length (buffer-lines buffer))
               (buffer-height buffer)))
     (when (<= (buffer-y buffer)
-             (buffer-top-row buffer))
+              (buffer-top-row buffer))
       (incf (buffer-y buffer)))
     (incf (buffer-top-row buffer))
     (normalize-y buffer)

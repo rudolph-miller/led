@@ -108,9 +108,11 @@
   (ignore-right-bottom-error window x y
     (if (ichar-attr ichar)
         (progn (wattron (window-entity window) (ichar-attr ichar))
-               (write-char-at-point (window-entity window) (ichar-char ichar) x y)
+               (write-string-at-point (window-entity window)
+                                      (string (ichar-char ichar)) x y)
                (wattroff (window-entity window) (ichar-attr ichar)))
-        (write-string-at-point (window-entity window) (string (ichar-char ichar)) x y))))
+        (write-string-at-point (window-entity window)
+                               (string (ichar-char ichar)) x y))))
 
 (defun window-write-lines (window)
   (loop with lines = (window-lines window)

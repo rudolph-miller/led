@@ -10,7 +10,8 @@
            :ichar-char
            :ichar-attr
            :character-to-ichar
-           :ichar-length
+           :ichar-width
+           :ichars-width
 
            ;; line
            :make-line
