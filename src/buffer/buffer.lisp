@@ -96,7 +96,7 @@
             into result
         do (incf current-length ichar-width)
         finally (return
-                  (append result (list (subseq ichars start position))))))
+                  (append result (list (subseq ichars start))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -364,13 +364,13 @@
 
 (defun delete-line-at-point (y &optional (buffer *current-buffer*))
   (let ((lines (buffer-lines buffer)))
+    (unless (< (buffer-y buffer) (buffer-visible-line-max buffer))
+      (decf (buffer-y buffer)))
     (unless (zerop (length lines))
       (setf (buffer-lines buffer)
             (concatenate 'vector
                          (subseq lines 0 y)
                          (subseq lines (1+ y))))
-      (redraw-buffer)
-      (normalize-y buffer)
       (normalize-x buffer)
       (redraw-buffer)
       t)))
