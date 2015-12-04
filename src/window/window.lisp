@@ -75,7 +75,7 @@
         (initialize)
         (setf (window-entity window) (standard-window))
         (disable-echoing)
-        (enable-raw-input :interpret-control-characters t)
+        (enable-raw-input)
         (enable-non-blocking-mode (window-entity window))
         (enable-extra-keys (window-entity window))
         (initialize-window-dimensions window)
