@@ -35,10 +35,10 @@
            :insert-new-line-at-point
            :insert-new-line
            :insert-next-line
-           :insert-ichar-at-point
-           :insert-ichar
            :insert-eol-at-point
-           :insert-eol))
+           :insert-eol
+           :insert-ichar-at-point
+           :insert-ichar))
 (in-package :led.buffer.buffer)
 
 
@@ -239,6 +239,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; redraw-buffer
 
+;; FIXME: Support flags for should really redraw or not
+;; redraw-all, redraw-line, no-need
+
+;; FIXME: Support delay to redlaw window
+
 (defun redraw-buffer (&optional (buffer *current-buffer*))
   (migrate-buffer buffer)
   (redraw)
@@ -421,21 +426,6 @@
 (defun insert-next-line (&optional (buffer *current-buffer*))
   (insert-new-line-at-point (1+ (buffer-y buffer)) buffer))
 
-(defun insert-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
-  (ensure-buffer-has-more-than-one-lines buffer)
-  (let* ((line (aref (buffer-lines buffer) y))
-         (ichars (line-ichars line)))
-    (setf (line-ichars line)
-          (concatenate 'vector
-                       (subseq ichars 0 x)
-                       (vector ichar)
-                       (subseq ichars x))))
-  (redraw-buffer)
-  t)
-
-(defun insert-ichar (ichar &optional (buffer *current-buffer*))
-  (insert-ichar-at-point ichar (buffer-x buffer) (buffer-y buffer) buffer))
-
 (defun insert-eol-at-point (x y &optional (buffer *current-buffer*))
   (ensure-buffer-has-more-than-one-lines buffer)
   (let* ((lines (buffer-lines buffer))
@@ -453,3 +443,18 @@
 
 (defun insert-eol (&optional (buffer *current-buffer*))
   (insert-eol-at-point (buffer-x buffer) (buffer-y buffer) buffer))
+
+(defun insert-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
+  (ensure-buffer-has-more-than-one-lines buffer)
+  (let* ((line (aref (buffer-lines buffer) y))
+         (ichars (line-ichars line)))
+    (setf (line-ichars line)
+          (concatenate 'vector
+                       (subseq ichars 0 x)
+                       (vector ichar)
+                       (subseq ichars x))))
+  (redraw-buffer)
+  t)
+
+(defun insert-ichar (ichar &optional (buffer *current-buffer*))
+  (insert-ichar-at-point ichar (buffer-x buffer) (buffer-y buffer) buffer))

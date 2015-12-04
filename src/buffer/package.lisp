@@ -26,10 +26,10 @@
            :insert-new-line-at-point
            :insert-new-line
            :insert-next-line
-           :insert-ichar-at-point
-           :insert-ichar
            :insert-eol-at-point
            :insert-eol
+           :insert-ichar-at-point
+           :insert-ichar
 
            ;; command-line-buffer
            :*command-line-buffer*
