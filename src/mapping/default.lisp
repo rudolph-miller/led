@@ -105,3 +105,13 @@
         for char = (code-char code)
         for dsl = (char-dsl char)
         do (funcall fn char dsl)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; multibyte-key
+
+(dolist (mode (list :insert :command-line))
+  (setf (gethash :multibyte-key (gethash mode *global-key-mapping*))
+        (lambda (char)
+          (insert-ichar (character-to-ichar char))
+          (cursor-right))))

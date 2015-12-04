@@ -10,6 +10,7 @@
            :ichar-char
            :ichar-attr
            :character-to-ichar
+           :char-width
            :ichar-width
            :ichars-width
 

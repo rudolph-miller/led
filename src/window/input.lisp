@@ -79,11 +79,19 @@
     (loop with *stop-input-loop* = nil
           with contexts = (current-mappings)
           for char = (get-char)
-          for got = (fn-or-next-contexts char contexts)
+          for dsl = (char-dsl char)
+          for multibyte-p = (and (not dsl)
+                               (> (char-width char) 1))
+          for got = (if multibyte-p
+                        (gethash :multibyte-key (car (current-mappings)))
+                        (fn-or-next-contexts char contexts))
           do (typecase got
                (cons (setq contexts (current-mappings got)))
                (null (setq contexts (current-mappings)))
-               (otherwise (funcall got) (setq contexts (current-mappings))))
+               (otherwise (if multibyte-p
+                              (funcall got char)
+                              (funcall got))
+                (setq contexts (current-mappings))))
           finally (setq *stop-input-loop* nil)
           until *stop-input-loop*)))
 

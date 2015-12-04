@@ -6,6 +6,7 @@
            :ichar-char
            :ichar-attr
            :character-to-ichar
+           :char-width
            :ichar-width
            :ichars-width))
 (in-package :led.internal.character)
@@ -27,11 +28,18 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; char-width
+
+(defun char-width (char)
+  (if (char<= char #\U+007F) 1 2))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ichar-width
 
 (defun ichar-width (ichar)
   (let ((char (ichar-char ichar)))
-    (if (char<= char #\U+007F) 1 2)))
+    (char-width char)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

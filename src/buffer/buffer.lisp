@@ -209,9 +209,12 @@
 
 (defun migrate-buffer-line (line window y start end)
   (loop with win-lines = (window-lines window)
+        with win-width = (window-width window)
         for ichar across (line-ichars-with-padding line (- end start))
-        for x from start
+        for x from start below win-width
         do (setf (aref win-lines y x) ichar)
+        when (and ichar (> (ichar-width ichar) 1))
+          do (incf x)
         finally (unless (line-eol-p line)
                   (setf (aref win-lines y x) (character-to-ichar #\\)))))
 
