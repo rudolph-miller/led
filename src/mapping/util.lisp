@@ -8,6 +8,8 @@
            :normal-mode-and-cursor-left
            :insert-mode
            :insert-mode-and-cursor-right
+           :cursor-left-most-and-insert-mode
+           :cursor-right-most-and-insert-mode
            :command-line-mode
            :exit-command-line-mode))
 (in-package :led.mapping.util)
@@ -41,6 +43,14 @@
 (defun insert-mode-and-cursor-right ()
   (insert-mode)
   (cursor-right))
+
+(defun cursor-left-most-and-insert-mode ()
+  (cursor-left-most)
+  (insert-mode))
+
+(defun cursor-right-most-and-insert-mode ()
+  (cursor-right-most)
+  (insert-mode-and-cursor-right))
 
 (defun command-line-mode ()
   (setf (current-mode) :command-line))

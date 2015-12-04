@@ -25,6 +25,8 @@
            :cursor-down
            :cursor-left
            :cursor-right
+           :cursor-left-most
+           :cursor-right-most
            :delete-line-at-point
            :delete-line
            :delete-ichar-at-point
@@ -337,6 +339,14 @@
            (buffer-x-max buffer))
     (incf (buffer-x buffer))
     (redraw-buffer buffer)))
+
+(defun cursor-left-most (&optional (buffer *current-buffer*))
+  (setf (buffer-x buffer) 0)
+  (redraw-buffer))
+
+(defun cursor-right-most (&optional (buffer *current-buffer*))
+  (setf (buffer-x buffer) (buffer-x-max buffer))
+  (redraw-buffer))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

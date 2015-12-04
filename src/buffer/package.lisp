@@ -16,6 +16,8 @@
            :cursor-down
            :cursor-left
            :cursor-right
+           :cursor-left-most
+           :cursor-right-most
            :delete-line-at-point
            :delete-line
            :delete-ichar-at-point

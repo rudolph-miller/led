@@ -28,6 +28,8 @@
 
 (global-set-key :normal "i" 'insert-mode)
 (global-set-key :normal "a" 'insert-mode-and-cursor-right)
+(global-set-key :normal "I" 'cursor-left-most-and-insert-mode)
+(global-set-key :normal "A" 'cursor-right-most-and-insert-mode)
 (global-set-key :insert "<Esc>" 'normal-mode-and-cursor-left)
 (global-set-key :insert "<C-j>" 'normal-mode-and-cursor-left)
 
