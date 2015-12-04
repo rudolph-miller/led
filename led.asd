@@ -50,7 +50,12 @@
                   ((:file "util")
                    (:file "default")
                    (:file "package")))
-                 (:file "command")
+                 (:module "command"
+                  :serial t
+                  :components
+                  ((:file "window")
+                   (:file "buffer")
+                   (:file "package")))
                  (:file "led"))))
   :description "[WIP] LED."
   :long-description
