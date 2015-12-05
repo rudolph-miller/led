@@ -24,7 +24,8 @@
                 ((:module "internal"
                   :serial t
                   :components
-                  ((:file "attribute")
+                  ((:file "bidirectional-list")
+                   (:file "attribute")
                    (:file "character")
                    (:file "line")
                    (:file "string")

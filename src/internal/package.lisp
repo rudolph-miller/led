@@ -1,11 +1,20 @@
 (in-package :cl-user)
 (defpackage led.internal
-  (:use :led.internal.character
+  (:use :led.internal.bidirectional-list
+        :led.internal.character
         :led.internal.line
         :led.internal.string
         :led.internal.mode
         :led.internal.key)
-  (:export ;; character
+  (:export ;; bidirectional-list
+           :bd
+           :make-new-bd
+           :iterate-bd
+           :iterate-to-end
+           :insert-prev
+           :insert-next
+   
+           ;; character
            :ichar
            :ichar-char
            :ichar-attr
@@ -19,6 +28,7 @@
            :line-ichars
            :line-eol-p
            :line-length
+           :delete-ichar-of-line
            :replace-ichar-of-line
            :insert-ichar-to-line
            :line-ichars-with-padding
