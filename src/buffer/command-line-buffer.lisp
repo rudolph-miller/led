@@ -74,7 +74,7 @@
 (defun on-command-line (content)
   (assert *command-line-buffer*)
   (set-buffer-content content *command-line-buffer*)
-  (redraw-buffer *command-line-buffer*))
+  (redraw-buffer nil *command-line-buffer*))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

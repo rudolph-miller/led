@@ -3,6 +3,7 @@
   (:use :cl
         :led.internal)
   (:import-from :charms/ll
+                :mvwdelch
                 :wattron
                 :wattroff
                 :*escdelay*)
@@ -14,6 +15,7 @@
                 :enable-non-blocking-mode
                 :enable-extra-keys
                 :window-dimensions
+                :window-pointer
                 :write-string-at-point
                 :move-cursor
                 :refresh-window
@@ -22,6 +24,7 @@
   (:export :*window*
            :*escape-delay*
            :make-window
+           :set-window-ichar
            :window-width
            :window-height
            :window-x
@@ -39,6 +42,8 @@
 (defvar *window* nil)
 
 (defvar *escape-delay* 10)
+
+(defvar *changed-points* nil)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -85,10 +90,11 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; erase
+;; set-window-ichar
 
-(defun erase-window (window)
-  (clear-window (window-entity window)))
+(defun set-window-ichar (x y ichar  &optional (window *window*))
+  (prog1 (setf (aref (window-lines window) y x) ichar)
+    (push (cons x y) *changed-points*)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -114,14 +120,25 @@
         (write-string-at-point (window-entity window)
                                (string (ichar-char ichar)) x y))))
 
-(defun window-write-lines (window)
-  (loop with lines = (window-lines window)
-        with height = (array-dimension lines 0)
-        with width = (array-dimension lines 1)
-        for y from 0 below height
-        do (loop for x from 0 below width
-                 for ichar = (aref lines y x)
-                 do (when ichar (window-write-ichar window ichar x y)))))
+(defun window-write-lines (window &optional force-update)
+  (labels ((window-delete-ichar (window x y)
+             (mvwdelch (window-pointer (window-entity window)) y x))
+           (write-ichar (x y ichar)
+             (if ichar
+                 (window-write-ichar window ichar x y)
+                 (window-delete-ichar window x y))))
+    (if force-update
+        (loop with lines = (window-lines window)
+              with height = (array-dimension lines 0)
+              with width = (array-dimension lines 1)
+              for y from 0 below height
+              do (loop for x from 0 below width
+                       for ichar = (aref lines y x)
+                       do (write-ichar x y ichar)))
+        (loop for (x . y) in *changed-points*
+              for ichar = (aref (window-lines window) y x)
+              do (write-ichar x y ichar)))
+    (setq *changed-points* nil)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -141,9 +158,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; redraw
 
-(defun redraw (&optional (window *window*))
-  (erase-window window)
-  (window-write-lines window)
+(defun redraw (&optional force-update (window *window*))
+  (window-write-lines window force-update)
   (update-cursor window)
   (refresh window))
 

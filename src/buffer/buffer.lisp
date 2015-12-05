@@ -208,15 +208,14 @@
 ;; (defun migrate-buffers ())
 
 (defun migrate-buffer-line (line window y start end)
-  (loop with win-lines = (window-lines window)
-        with win-width = (window-width window)
+  (loop with win-width = (window-width window)
         for ichar across (line-ichars-with-padding line (- end start))
         for x from start below win-width
-        do (setf (aref win-lines y x) ichar)
+        do (set-window-ichar x y ichar)
         when (and ichar (> (ichar-width ichar) 1))
           do (incf x)
         finally (unless (line-eol-p line)
-                  (setf (aref win-lines y x) (character-to-ichar #\\)))))
+                  (set-window-ichar x y (character-to-ichar #\\)))))
 
 (defun buffer-status-line (buffer)
   (let* ((name (buffer-status buffer))
@@ -259,9 +258,9 @@
 
 ;; FIXME: Support delay to redlaw window
 
-(defun redraw-buffer (&optional (buffer *current-buffer*))
+(defun redraw-buffer (&optional force-update (buffer *current-buffer*))
   (migrate-buffer buffer)
-  (redraw)
+  (redraw force-update)
   t)
 
 
@@ -303,7 +302,7 @@
       (decf (buffer-y buffer)))
     (decf (buffer-top-row buffer))
     (normalize-x buffer)
-    (redraw-buffer buffer)))
+    (redraw-buffer nil buffer)))
 
 (defun next-line (&optional (buffer *current-buffer*))
   (when (< (buffer-top-row buffer)
@@ -315,7 +314,7 @@
     (incf (buffer-top-row buffer))
     (normalize-y buffer)
     (normalize-x buffer)
-    (redraw-buffer buffer)))
+    (redraw-buffer nil buffer)))
 
 (defun cursor-up (&optional (buffer *current-buffer*))
   (multiple-value-bind (x y) (buffer-window-cursor-position buffer)
@@ -328,7 +327,7 @@
            (decf (buffer-y buffer)) t)
           (t nil))
       (normalize-x buffer)
-      (redraw-buffer buffer))))
+      (redraw-buffer nil buffer))))
 
 (defun cursor-down (&optional (buffer *current-buffer*))
   (prog1
@@ -340,26 +339,26 @@
          (incf (buffer-y buffer)) t)
         (t nil))
     (normalize-x buffer)
-    (redraw-buffer buffer)))
+    (redraw-buffer nil buffer)))
 
 (defun cursor-left (&optional (buffer *current-buffer*))
   (when (> (buffer-x buffer) 0)
     (decf (buffer-x buffer))
-    (redraw-buffer buffer)))
+    (redraw-buffer nil buffer)))
 
 (defun cursor-right (&optional (buffer *current-buffer*))
   (when (< (buffer-x buffer)
            (buffer-x-max buffer))
     (incf (buffer-x buffer))
-    (redraw-buffer buffer)))
+    (redraw-buffer nil buffer)))
 
 (defun cursor-left-most (&optional (buffer *current-buffer*))
   (setf (buffer-x buffer) 0)
-  (redraw-buffer))
+  (redraw-buffer nil buffer))
 
 (defun cursor-right-most (&optional (buffer *current-buffer*))
   (setf (buffer-x buffer) (buffer-x-max buffer))
-  (redraw-buffer))
+  (redraw-buffer nil buffer))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -422,7 +421,7 @@
   (let* ((line (aref (buffer-lines buffer) y))
          (ichars (line-ichars line)))
     (setf (aref ichars x) ichar)
-    (redraw-buffer buffer)))
+    (redraw-buffer nil buffer)))
 
 (defun replace-ichar (ichar &optional (buffer *current-buffer*))
   (replace-ichar-at-point ichar (buffer-x buffer) (buffer-y buffer) buffer))

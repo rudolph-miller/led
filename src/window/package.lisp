@@ -5,6 +5,7 @@
   (:export ;; window
            :*window*
            :make-window
+           :set-window-ichar
            :window-width
            :window-height
            :window-x
