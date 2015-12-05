@@ -123,7 +123,8 @@
                                           buffer))
           for (ichars cdr) on icharss
           for length = (length ichars)
-          while cdr
+          while (and cdr
+                     (> x length))
           do (decf x length)
              (incf y))
     (values x y)))
@@ -187,7 +188,7 @@
 
 (defun buffer-migrate-lines (buffer length)
   (loop with top-row = (buffer-top-row buffer)
-        with result = (make-array length :initial-element (make-line :eol-p t))
+        with result = (make-array length :initial-element (make-line nil t))
         with lines = (buffer-lines buffer)
         for y from top-row below (length (buffer-lines buffer))
         with result-length = (length result)
@@ -198,7 +199,7 @@
                  for i = index
                    then (incf index)
                  while (< i result-length)
-                 do (setf (aref result i) (make-line :ichars ichars))
+                 do (setf (aref result i) (make-line ichars))
                  finally (when (< i result-length)
                            (setf (line-eol-p (aref result i)) t)))
         finally (setf (buffer-visible-lines buffer) (apply #'vector visible-lines))
@@ -387,10 +388,7 @@
       (if (zerop (length ichars))
           (delete-line-at-point y buffer)
           (progn
-            (setf (line-ichars line)
-                  (concatenate 'vector
-                               (subseq ichars 0 x)
-                               (subseq ichars (1+ x))))
+            (delete-ichar-of-line x line)
             (normalize-x buffer)
             (redraw-buffer)
             t)))))
@@ -414,14 +412,13 @@
 
 (defun ensure-buffer-has-more-than-one-lines (buffer)
   (when (zerop (length (buffer-lines buffer)))
-    (setf (buffer-lines buffer) (vector (make-line :eol-p t)))))
+    (setf (buffer-lines buffer) (vector (make-line nil t)))))
 
 (defun replace-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
   (ensure-buffer-has-more-than-one-lines buffer)
-  (let* ((line (aref (buffer-lines buffer) y))
-         (ichars (line-ichars line)))
-    (setf (aref ichars x) ichar)
-    (redraw-buffer nil buffer)))
+  (replace-ichar-at-point ichar x (aref (buffer-lines buffer) y))
+  (redraw-buffer nil buffer)
+  t)
 
 (defun replace-ichar (ichar &optional (buffer *current-buffer*))
   (replace-ichar-at-point ichar (buffer-x buffer) (buffer-y buffer) buffer))
@@ -436,7 +433,7 @@
     (setf (buffer-lines buffer)
           (concatenate 'vector
                        (subseq lines 0 y)
-                       (vector (make-line :eol-p t))
+                       (vector (make-line nil t))
                        (subseq lines y))))
   (normalize-x buffer)
   (redraw-buffer)
@@ -455,8 +452,8 @@
     (setf (buffer-lines buffer)
           (concatenate 'vector
                        (subseq lines 0 y)
-                       (list (make-line :ichars (subseq ichars 0 x) :eol-p t)
-                             (make-line :ichars (subseq ichars x) :eol-p t))
+                       (list (make-line (subseq ichars 0 x) t)
+                             (make-line (subseq ichars x) t))
                        (subseq lines (1+ y))))
     (incf (buffer-y buffer))
     (setf (buffer-x buffer) 0)
@@ -468,13 +465,7 @@
 
 (defun insert-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
   (ensure-buffer-has-more-than-one-lines buffer)
-  (let* ((line (aref (buffer-lines buffer) y))
-         (ichars (line-ichars line)))
-    (setf (line-ichars line)
-          (concatenate 'vector
-                       (subseq ichars 0 x)
-                       (vector ichar)
-                       (subseq ichars x))))
+  (insert-ichar-to-line ichar x (aref (buffer-lines buffer) y))
   (redraw-buffer)
   t)
 

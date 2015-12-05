@@ -19,6 +19,8 @@
            :line-ichars
            :line-eol-p
            :line-length
+           :replace-ichar-of-line
+           :insert-ichar-to-line
            :line-ichars-with-padding
            :string-to-line
 
