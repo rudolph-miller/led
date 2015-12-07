@@ -10,7 +10,7 @@
            :window-height
            :window-x
            :window-y
-           :window-lines
+           :window-board
            :window-entity
            :redraw
            :close-window

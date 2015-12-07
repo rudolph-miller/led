@@ -29,7 +29,7 @@
            :window-height
            :window-x
            :window-y
-           :window-lines
+           :window-board
            :window-entity
            :redraw
            :close-window))
@@ -54,18 +54,18 @@
   height
   (x 0)
   (y 0)
-  (lines #() :type array)
+  (board #() :type array)
   entity)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; make-window
 
-(defun initialize-window-lines (window)
+(defun initialize-window-board (window)
   (let ((lines (make-array (list (window-height window)
                                  (window-width window))
                            :initial-element nil)))
-    (setf (window-lines window) lines)))
+    (setf (window-board window) lines)))
 
 (defun initialize-window-dimensions (window)
   (check-type window window)
@@ -84,7 +84,7 @@
         (enable-non-blocking-mode (window-entity window))
         (enable-extra-keys (window-entity window))
         (initialize-window-dimensions window)
-        (initialize-window-lines window)
+        (initialize-window-board window)
         (setq *escdelay* *escape-delay*)
         (setq *window* window))))
 
@@ -93,7 +93,7 @@
 ;; set-window-ichar
 
 (defun set-window-ichar (x y ichar  &optional (window *window*))
-  (prog1 (setf (aref (window-lines window) y x) ichar)
+  (prog1 (setf (aref (window-board window) y x) ichar)
     (push (cons x y) *changed-points*)))
 
 
@@ -128,7 +128,7 @@
                  (window-write-ichar window ichar x y)
                  (window-delete-ichar window x y))))
     (if force-update
-        (loop with lines = (window-lines window)
+        (loop with lines = (window-board window)
               with height = (array-dimension lines 0)
               with width = (array-dimension lines 1)
               for y from 0 below height
@@ -136,7 +136,7 @@
                        for ichar = (aref lines y x)
                        do (write-ichar x y ichar)))
         (loop for (x . y) in *changed-points*
-              for ichar = (aref (window-lines window) y x)
+              for ichar = (aref (window-board window) y x)
               do (write-ichar x y ichar)))
     (setq *changed-points* nil)))
 

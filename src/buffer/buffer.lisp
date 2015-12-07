@@ -186,7 +186,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; migarte
 
-(defun buffer-migrate-lines (buffer length)
+(defun buffer-board (buffer length)
   (loop with top-row = (buffer-top-row buffer)
         with result = (make-array length :initial-element #())
         with eol-lines = nil
@@ -234,7 +234,7 @@
   (let* ((status-line (buffer-status-line buffer))
          (migrate-line-length (buffer-height-without-status-line buffer)))
     (multiple-value-bind (lines eol-lines)
-        (buffer-migrate-lines buffer migrate-line-length)
+        (buffer-board buffer migrate-line-length)
       (multiple-value-bind (x y) (buffer-window-cursor-position buffer)
         (loop for ichars across lines
               for eol-p = (or (zerop (length ichars))
