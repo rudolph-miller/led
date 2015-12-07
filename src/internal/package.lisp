@@ -24,10 +24,10 @@
            :bdl-value
            :bdl-index
            :iterate-bdl
-           :iterate-to-end
            :get-by-index
            :insert-prev
            :insert-next
+           :replace-bdl
            :delete-bdl
    
            ;; character
@@ -41,11 +41,22 @@
            :ichars-with-padding
 
            ;; bdl-ichar
+           :bdl-ichar
+           :bdl-ichar-ichar
+           :make-top-bdl-ichar
+           :make-dbl-ichar
+           :insert-prev-bdl-ichar
+           :insert-next-bdl-ichar
+           :replace-bdl-ichar
+           :delete-bdl-ichar
+           :bdl-ichar-length
+           :iterate-bdl-ichars
+
            ;; line
            :make-line
            :line-index
            :line-ichars
-           :ichar-position
+           :bdl-ichar-line
            :make-top-line
            :line-length
            :line-ichars-length

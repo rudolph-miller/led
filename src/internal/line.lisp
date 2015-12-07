@@ -1,22 +1,20 @@
 (in-package :cl-user)
 (defpackage led.internal.line
   (:use :cl
+        :led.internal.bidirectional-link
         :led.internal.character
-        :led.internal.bidirectional-link)
+        :led.internal.bdl-ichar)
   (:export :make-line
            :line-index
-           :line-ichars
+           :line-bdl-ichars
            :line-string
-           :ichar-position
+           :bdl-ichar-line
            :make-top-line
            :line-length
-           :line-ichars-length
+           :line-bdl-ichars-length
            :insert-prev-line
            :insert-next-line
            :delete-line
-           :delete-ichar-of-line
-           :replace-ichar-of-line
-           :insert-ichar-to-line
            :iterate-lines))
 (in-package :led.internal.line)
 
@@ -27,13 +25,15 @@
 (defstruct (line (:include bdl)
                  (:constructor %make-line)))
 
-(defun line-ichars (line)
+(defun line-top-bdl-ichar (line)
   (bdl-value line))
 
 (defun line-string (line)
   (with-output-to-string (stream)
-    (loop for ichar across (line-ichars line)
-          do (write-char (ichar-char ichar) stream))))
+    (iterate-bdl-ichars
+     (line-top-bdl-ichar line)
+     (lambda (bdl-ichar)
+       (write-char (ichar-char (bdl-ichar-ichar bdl-ichar)) stream)))))
 
 (defmethod print-object ((object line) stream)
   (print-unreadable-object (object stream :type t :identity t)
@@ -44,16 +44,12 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ichar-position
+;; bdl-ichar-line
 
-(defvar *ichar-line-table* (make-hash-table :test #'eq))
+(defvar *bdl-ichar-line-table* (make-hash-table :test #'eq))
 
-(defun ichar-position (ichar)
-  (let* ((line (gethash ichar *ichar-line-table*))
-         (x (loop for i across (line-ichars line)
-                  for index from 0
-                  when (eq i ichar) do (return index))))
-    (cons x line)))
+(defun bdl-ichar-line (bdl-ichar)
+  (gethash bdl-ichar *bdl-ichar-line-table*))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -66,19 +62,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; make-line
 
-(defun make-line (ichars)
-  (let* ((ichars (etypecase ichars
-                   (string (loop for character across ichars
-                                 collecting (character-to-ichar character)))
-                   ((array ichar) ichars)
-                   (cons ichars)
-                   (null nil)))
-         (adjustable (make-array (length ichars)
-                                 :initial-contents ichars
-                                 :adjustable t))
-         (line (%make-line :value adjustable)))
-    (loop for ichar across adjustable
-          do (setf (gethash ichar *ichar-line-table*) line))
+(defun make-line (string)
+  (let* ((bdl-ichar (make-top-bdl-ichar))
+         (line (%make-line :value bdl-ichar)))
+    (when string
+      (loop for char across string
+            for got = (insert-next-bdl-ichar char bdl-ichar)
+              then (insert-next-bdl-ichar char got)
+            do (setf (gethash got *bdl-ichar-line-table*) line)))
     line))
 
 
@@ -117,44 +108,14 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; line-ichars-length
+;; line-bdl-ichars-length
 
-(defun line-ichars-length (line)
-  (length (line-ichars line)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; delete-ichar-of-line
-
-(defun delete-ichar-of-line (x line)
-  (let ((ichars (line-ichars line)))
-    (setf (subseq ichars x) (subseq ichars (1+ x)))
-    (adjust-array ichars (1- (length ichars)))
-    line))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; replace-ichar-of-line
-
-(defun replace-ichar-of-line (ichar x line)
-  (let ((ichars (line-ichars line)))
-    (setf (aref ichars x) ichar)
-    (setf (gethash ichar *ichar-line-table*) line)
-    line))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; insert-ichar-to-line
-
-(defun insert-ichar-to-line (ichar x line)
-  (let ((ichars (line-ichars line)))
-    (adjust-array ichars (1+ (length ichars)))
-    (setf (subseq ichars (1+ x)) (subseq ichars x))
-    (setf (aref ichars x) ichar)
-    (setf (gethash ichar *ichar-line-table*) line)
-    line))
+(defun line-bdl-ichars-length (line)
+  (bdl-ichar-length (line-top-bdl-ichar line)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; iterate-lines
 
 (defun iterate-lines (top-line fn)
-  (iterate-to-end top-line fn))
+  (iterate-bdl top-line fn))

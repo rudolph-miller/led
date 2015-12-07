@@ -17,10 +17,11 @@
            :next
            :bdl-value
            :bdl-index
-           :iterate-to-end
+           :iterate-bdl
            :get-by-index
            :insert-prev
            :insert-next
+           :replace-bdl
            :delete-bdl))
 (in-package :led.internal.bidirectional-link)
 
@@ -112,7 +113,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; iterate
 
-(defun iterate-to-end (bdl fn)
+(defun iterate-bdl (bdl fn)
   (loop for item = (if (top-bdl-p bdl) (next bdl) bdl)
           then (next item)
         while item
@@ -124,7 +125,7 @@
 
 (defun get-by-index (index bdl)
   (assert (> index (bdl-index bdl)))
-  (iterate-to-end
+  (iterate-bdl
    bdl
    (lambda (item)
      (when (= (bdl-index item) index)
@@ -141,7 +142,7 @@
     (setf (bdl-next new-bdl) bdl)
     (setf (bdl-prev bdl) new-bdl)
     (setf (bdl-next prev) new-bdl)
-    (iterate-to-end bdl #'(lambda (bdl) (incf (bdl-index bdl))))
+    (iterate-bdl bdl #'(lambda (bdl) (incf (bdl-index bdl))))
     new-bdl))
 
 
@@ -156,11 +157,24 @@
     (setf (bdl-prev new-bdl) bdl)
     (setf (bdl-next new-bdl) next)
     (unless (top-bdl-p next)
-      (iterate-to-end next #'(lambda (bdl) (incf (bdl-index bdl)))))
+      (iterate-bdl next #'(lambda (bdl) (incf (bdl-index bdl)))))
     (setf (bdl-next bdl) new-bdl)
     (setf (bdl-prev next) new-bdl)
     new-bdl))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; replace-bdl
+
+(defun replace-bdl (new-bdl bdl)
+  (let ((prev (bdl-prev bdl))
+        (next (bdl-next bdl)))
+    (setf (bdl-prev new-bdl) prev)
+    (setf (bdl-next new-bdl) next)
+    (setf (bdl-index new-bdl) (bdl-index bdl))
+    (setf (bdl-next prev) new-bdl)
+    (setf (bdl-prev next) new-bdl)
+    new-bdl))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; delete-bdl
@@ -169,7 +183,7 @@
   (let ((prev (bdl-prev bdl))
         (next (bdl-next bdl)))
     (unless (zerop (bdl-index next))
-      (iterate-to-end next #'(lambda (bdl) (decf (bdl-index bdl)))))
+      (iterate-bdl next #'(lambda (bdl) (decf (bdl-index bdl)))))
     (setf (bdl-next prev) next)
     (setf (bdl-prev next) prev)
     t))
