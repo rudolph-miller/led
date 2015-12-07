@@ -3,6 +3,8 @@
   (:use :cl)
   (:export :bd
            :make-bd
+           :make-top-bd
+           :top-bd-p
            :bd-length
            :bd-index+
            :bd-index-
@@ -42,7 +44,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; make-new-bd
 
-(defun make-new-bd ()
+(defun make-top-bd ()
   (let ((bd (make-bd :index +top-index+)))
     (setf (bd-prev bd) bd)
     (setf (bd-next bd) bd)

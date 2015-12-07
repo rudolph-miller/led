@@ -9,12 +9,23 @@
   (:export ;; bidirectional-link
            :bd
            :make-bd
-           :bd-prev
-           :bd-next
+           :make-top-bd
+           :top-bd-p
+           :bd-length
+           :bd-index+
+           :bd-index-
+           :bd-index=
+           :bd-index<
+           :bd-index<=
+           :bd-index>
+           :bd-index>=
+           :prev
+           :next
            :bd-value
            :bd-index
            :iterate-bd
            :iterate-to-end
+           :get-by-index
            :insert-prev
            :insert-next
            :delete-bd
@@ -31,12 +42,17 @@
 
            ;; line
            :make-line
+           :line-index
            :line-ichars
+           :ichar-position
+           :make-top-line
            :line-length
+           :line-ichars-length
            :delete-ichar-of-line
            :replace-ichar-of-line
            :insert-ichar-to-line
            :string-to-line
+           :iterate-lines
 
            ;; string
            :string-to-lines

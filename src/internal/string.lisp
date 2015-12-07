@@ -2,6 +2,7 @@
 (defpackage led.internal.string
   (:use :cl
         :led.internal.character
+        :led.internal.bidirectional-link
         :led.internal.line)
   (:export :string-to-lines
            :lines-to-string))
@@ -12,22 +13,21 @@
 ;; string-to-lines
 
 (defun string-to-lines (string)
-  (loop with stream = (make-string-input-stream string)
-        for string = (read-line stream nil nil)
-        while string
-        for line = (make-line string) then (insert-next-line string line)
-        finally (return (next-line line))))
+  (let ((top-line (make-top-line)))
+    (loop with stream = (make-string-input-stream string)
+          for got = (read-line stream nil nil)
+          while got
+          for line = (insert-next-line got top-line)
+            then (insert-next-line got line))
+    top-line))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lines-to-string
 
-(defun line-ichars-length (line)
-  (1+ (line-length line)))
-
 (defun lines-chars-length (lines)
   (let ((result 0))
-    (iterate-lines lines (lambda (line) (incf result (line-ichars-length line))))
+    (iterate-lines lines (lambda (line) (incf result (1+ (line-ichars-length line)))))
     result))
 
 (defun lines-to-string (lines)

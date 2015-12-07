@@ -4,17 +4,20 @@
         :led.internal.character
         :led.internal.bidirectional-link)
   (:export :make-line
+           :line-index
            :line-ichars
-           :prev-line
-           :next-line
            :line-string
+           :ichar-position
+           :make-top-line
            :line-length
+           :line-ichars-length
            :insert-prev-line
            :insert-next-line
            :delete-line
            :delete-ichar-of-line
            :replace-ichar-of-line
-           :insert-ichar-to-line))
+           :insert-ichar-to-line
+           :iterate-lines))
 (in-package :led.internal.line)
 
 
@@ -27,12 +30,6 @@
 (defun line-ichars (line)
   (bd-value line))
 
-(defun prev-line (line)
-  (bd-prev line))
-
-(defun next-line (line)
-  (bd-next line))
-
 (defun line-string (line)
   (with-output-to-string (stream)
     (loop for ichar across (line-ichars line)
@@ -40,7 +37,30 @@
 
 (defmethod print-object ((object line) stream)
   (print-unreadable-object (object stream :type t :identity t)
-    (format stream ":INDEX ~a :CONTENTS ~a" (bd-index object) (line-string object))))
+    (format stream
+            ":INDEX ~a :CONTENTS ~a"
+            (bd-index object)
+            (line-string object))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ichar-position
+
+(defvar *ichar-line-table* (make-hash-table :test #'eq))
+
+(defun ichar-position (ichar)
+  (let* ((line (gethash ichar *ichar-line-table*))
+         (x (loop for i across (line-ichars line)
+                  for index from 0
+                  when (eq i ichar) do (return index))))
+    (cons x line)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; make-top-line
+
+(defun make-top-line ()
+  (make-top-bd))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -51,14 +71,14 @@
                    (string (loop for character across ichars
                                  collecting (character-to-ichar character)))
                    ((array ichar) ichars)
-                   (cons ichars)))
+                   (cons ichars)
+                   (null nil)))
          (adjustable (make-array (length ichars)
                                  :initial-contents ichars
                                  :adjustable t))
          (line (%make-line :value adjustable)))
-    (setf (bd-index line) 0)
-    (setf (bd-next line) line)
-    (setf (bd-prev line) line)
+    (loop for ichar across adjustable
+          do (setf (gethash ichar *ichar-line-table*) line))
     line))
 
 
@@ -92,7 +112,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; line-length
 
-(defun line-length (line)
+(defun line-length (top-line)
+  (bd-length top-line))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; line-ichars-length
+
+(defun line-ichars-length (line)
   (length (line-ichars line)))
 
 
@@ -111,6 +138,7 @@
 (defun replace-ichar-of-line (ichar x line)
   (let ((ichars (line-ichars line)))
     (setf (aref ichars x) ichar)
+    (setf (gethash ichar *ichar-line-table*) line)
     line))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -121,4 +149,12 @@
     (adjust-array ichars (1+ (length ichars)))
     (setf (subseq ichars (1+ x)) (subseq ichars x))
     (setf (aref ichars x) ichar)
+    (setf (gethash ichar *ichar-line-table*) line)
     line))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; iterate-lines
+
+(defun iterate-lines (top-line fn)
+  (iterate-to-end top-line fn))

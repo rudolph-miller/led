@@ -14,8 +14,7 @@
            :buffer-y
            :buffer-top-row
            :buffer-status
-           :buffer-lines
-           :buffer-visible-lines
+           :buffer-top-line
            :buffer-content
            :set-buffer-content
            :redraw-buffer
@@ -27,19 +26,13 @@
            :cursor-right
            :cursor-left-most
            :cursor-right-most
-           :delete-line-at-point
            :delete-line
-           :delete-ichar-at-point
            :delete-ichar
            :delete-prev-ichar
-           :replace-ichar-at-point
            :replace-ichar
-           :insert-new-line-at-point
            :insert-new-line
            :insert-next-line
-           :insert-eol-at-point
            :insert-eol
-           :insert-ichar-at-point
            :insert-ichar))
 (in-package :led.buffer.buffer)
 
@@ -68,16 +61,29 @@
    (height :accessor buffer-height
            :initarg :height
            :initform (1- (window-height *window*)))
-   (x :accessor buffer-x
-      :initform 0)
-   (y :accessor buffer-y
-      :initform 0)
-   (top-row :accessor buffer-top-row
-            :initform 0)
-   (lines :accessor buffer-lines
+   (cursor :accessor buffer-cursor)
+   (lines :accessor buffer-top-line
           :initarg :lines)
-   (visible-lines :accessor buffer-visible-lines)))
+   (visible-top-line :accessor buffer-visible-top-line)
+   (visible-bottom-line :accessor buffer-visible-bottom-line)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; current-line
+
+(defun buffer-current-line (buffer)
+  (when (buffer-cursor buffer)
+    (let ((position (ichar-position (buffer-cursor buffer))))
+      (cdr position))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; cursor-x
+
+(defun buffer-cursor-x (buffer)
+  (when (buffer-cursor buffer)
+    (let ((position (ichar-position (buffer-cursor buffer))))
+      (car position))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; fold
@@ -97,37 +103,6 @@
         do (incf current-length ichar-width)
         finally (return
                   (append result (list (subseq ichars start))))))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; buffer-window-cursor-position
-
-(defun buffer-window-cursor-position (buffer)
-  (assert (buffer-visible-lines buffer))
-  (let ((x (+ (buffer-position-x buffer) (buffer-x buffer)))
-        (y (+ (buffer-position-y buffer)
-              (- (buffer-y buffer) (buffer-top-row buffer)))))
-    (loop for line across (buffer-visible-lines buffer)
-          for index from 0
-          while (< index y)
-          do (loop repeat (length (fold-ichars (line-ichars line) buffer))
-                   for i = index
-                     then (progn (when (> y i) (incf y))
-                                 (incf index))))
-    (loop with lines = (buffer-lines buffer)
-          with icharss = (if (zerop (length lines))
-                             nil
-                             (fold-ichars (line-ichars
-                                           (aref (buffer-lines buffer)
-                                                 (- y (buffer-position-y buffer))))
-                                          buffer))
-          for (ichars cdr) on icharss
-          for length = (length ichars)
-          while (and cdr
-                     (> x length))
-          do (decf x length)
-             (incf y))
-    (values x y)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -153,7 +128,8 @@
 (defmethod initialize-instance :around ((buffer buffer) &rest initargs)
   (declare (ignore initargs))
   (call-next-method)
-  (redraw-buffer))
+  (when (slot-boundp buffer 'lines)
+    (redraw-buffer)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -171,48 +147,64 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; initialize-cursor
+
+(defun initialize-cursor (buffer)
+  (if (zerop (line-length (buffer-top-line buffer)))
+      (setf (buffer-cursor buffer) nil)
+      (setf (buffer-cursor buffer)
+            (aref (line-ichars (next (buffer-top-line buffer))) 0)
+            (buffer-visible-top-line buffer)
+            (next (buffer-top-line buffer))))
+  t)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer-content
 
 (defun buffer-content (&optional (buffer *current-buffer*))
-  (lines-to-string (buffer-lines buffer)))
+  (lines-to-string (buffer-top-line buffer)))
 
 (defun set-buffer-content (string &optional (buffer *current-buffer*))
-  (setf (buffer-lines buffer)
-        (if string
-            (string-to-lines string)
-            #())))
+  (prog1 (setf (buffer-top-line buffer)
+               (if string
+                   (string-to-lines string)
+                   (make-line nil)))
+    (initialize-cursor buffer)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; migarte
 
 (defun buffer-board (buffer length)
-  (loop with top-row = (buffer-top-row buffer)
-        with result = (make-array length :initial-element #())
+  (loop with result = (make-array length :initial-element #())
         with eol-lines = nil
-        with lines = (buffer-lines buffer)
-        for y from top-row below (length (buffer-lines buffer))
-        with result-length = (length result)
-        for index from 0 below result-length
-        for line = (aref lines y)
-        collecting line into visible-lines
+        for index from 0 below length
+        for prev-line = nil then line
+        for line = (buffer-visible-top-line buffer) then (next line)
+        while line
         do (loop for ichars in (fold-ichars (line-ichars line) buffer)
-                 for i = index
-                   then (incf index)
-                 while (< i result-length)
+                 for i = index then (incf index)
+                 while (< i length)
                  do (setf (aref result i) ichars)
-                 finally (when (< i result-length)
+                 finally (when (< i length)
                            (push ichars eol-lines)))
-        finally (setf (buffer-visible-lines buffer) (apply #'vector visible-lines))
+        finally (setf (buffer-visible-bottom-line buffer) (or line prev-line))
                 (return (values result eol-lines))))
 
 ;; FIXME: Support multi buffers (like split window)
 ;; (defun migrate-buffers ())
 
-(defun migrate-buffer-line (ichars eol-p window y start end)
-  (loop with win-width = (window-width window)
+(defun migrate-buffer-line (ichars eol-p buffer window y start end)
+  (loop with cursor = (buffer-cursor buffer)
+        with win-width = (window-width window)
         for ichar across (ichars-with-padding ichars (- end start))
         for x from start below win-width
+        when (and (eq buffer *current-buffer*)
+                  cursor
+                  (eq ichar cursor))
+          do (setf (window-x window) x
+                   (window-y window) y)
         do (set-window-ichar x y ichar)
         when (and ichar (> (ichar-width ichar) 1))
           do (incf x)
@@ -221,7 +213,7 @@
 
 (defun buffer-status-line (buffer)
   (let* ((name (buffer-status buffer))
-         (line (when name (string-to-line name))))
+         (line (when name (make-line name))))
     (when line
       (line-ichars line))))
 
@@ -235,28 +227,27 @@
          (migrate-line-length (buffer-height-without-status-line buffer)))
     (multiple-value-bind (lines eol-lines)
         (buffer-board buffer migrate-line-length)
-      (multiple-value-bind (x y) (buffer-window-cursor-position buffer)
-        (loop for ichars across lines
-              for eol-p = (or (zerop (length ichars))
-                              (and (find ichars eol-lines :test #'eq) t))
-              for win-row from (buffer-position-y buffer)
-              with win-col-start = (buffer-position-x buffer)
-              with win-col-end = (+ win-col-start (buffer-width buffer))
-              do (migrate-buffer-line ichars
-                                      eol-p
-                                      window
-                                      win-row
-                                      win-col-start
-                                      win-col-end)
-              finally (when status-line
-                        (migrate-buffer-line status-line
-                                             t
-                                             window
-                                             (1- (buffer-height buffer))
-                                             win-col-start win-col-end)))
-        (when (eq buffer *current-buffer*)
-          (setf (window-x window) x)
-          (setf (window-y window) y))))))
+      (loop for ichars across lines
+            for eol-p = (or (zerop (length ichars))
+                            (and (find ichars eol-lines :test #'eq) t))
+            for win-row from (buffer-position-y buffer)
+            with win-col-start = (buffer-position-x buffer)
+            with win-col-end = (+ win-col-start (buffer-width buffer))
+            do (migrate-buffer-line ichars
+                                    eol-p
+                                    buffer
+                                    window
+                                    win-row
+                                    win-col-start
+                                    win-col-end)
+            finally (when status-line
+                      (migrate-buffer-line status-line
+                                           t
+                                           buffer
+                                           window
+                                           (1- (buffer-height buffer))
+                                           win-col-start
+                                           win-col-end))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -278,16 +269,11 @@
 
 ;; FIXME: ugly
 
-(defun buffer-visible-line-max (buffer)
-  (+ (buffer-top-row buffer)
-     (1- (length (buffer-visible-lines buffer)))))
+(defun buffer-max-line (buffer)
+  (buffer-visible-bottom-line buffer))
 
 (defun buffer-x-max (buffer)
-  (let* ((lines (buffer-lines buffer))
-         (current-line-length
-           (if (zerop (length lines))
-               0
-               (line-length (aref lines (buffer-y buffer))))))
+  (let ((current-line-length (line-length (buffer-current-line buffer))))
     (cond
       ((zerop current-line-length) 0)
       ((or (eq (current-mode) :insert)
@@ -296,77 +282,103 @@
       (t (1- current-line-length)))))
 
 (defun normalize-x (buffer)
-  (setf (buffer-x buffer)
-        (min (buffer-x buffer) (buffer-x-max buffer))))
+  (setf (buffer-cursor buffer)
+        (aref (line-ichars (buffer-current-line buffer))
+              (min (buffer-cursor-x buffer)
+                   (buffer-x-max buffer)))))
 
 (defun normalize-y (buffer)
-  (setf (buffer-y buffer)
-        (min (buffer-y buffer)
-             (buffer-visible-line-max buffer))))
+  (let ((current-line (buffer-current-line buffer))
+        (max-line (buffer-max-line buffer)))
+    (when (> (line-index current-line)
+              (line-index max-line))
+      (setf (buffer-cursor buffer)
+            (aref (line-ichars max-line) (buffer-cursor-x buffer))))))
 
 (defun prev-line (&optional (buffer *current-buffer*))
-  (when (> (buffer-top-row buffer) 0)
-    (when (>= (buffer-y buffer)
-              (buffer-visible-line-max buffer))
-      (decf (buffer-y buffer)))
-    (decf (buffer-top-row buffer))
+  (when (> (line-index (buffer-visible-top-line buffer)) 0)
+    (when (>= (line-index (buffer-current-line buffer))
+              (line-index (buffer-max-line buffer)))
+      (cursor-up buffer))
+    (setf (buffer-visible-top-line buffer)
+          (prev (buffer-visible-top-line buffer))
+          (buffer-visible-bottom-line buffer)
+          (prev (buffer-visible-bottom-line buffer)))
     (normalize-x buffer)
     (redraw-buffer nil buffer)))
 
 (defun next-line (&optional (buffer *current-buffer*))
-  (when (< (buffer-top-row buffer)
-           (- (length (buffer-lines buffer))
+  (when (< (line-index (buffer-current-line buffer))
+           (- (line-index (line-prev  (buffer-top-line buffer)))
               (buffer-height buffer)))
-    (when (<= (buffer-y buffer)
+    (when (<= (line-index (buffer-current-line buffer))
               (buffer-top-row buffer))
-      (incf (buffer-y buffer)))
-    (incf (buffer-top-row buffer))
+      (cursor-down buffer))
+    (setf (buffer-visible-top-line buffer)
+          (next (buffer-visible-top-line buffer))
+          (buffer-visible-bottom-line buffer)
+          (next (buffer-visible-bottom-line buffer)))
     (normalize-y buffer)
     (normalize-x buffer)
     (redraw-buffer nil buffer)))
 
 (defun cursor-up (&optional (buffer *current-buffer*))
-  (multiple-value-bind (x y) (buffer-window-cursor-position buffer)
-    (declare (ignore x))
+  (flet ((decf-cursor-y ()
+           (setf (buffer-cursor buffer)
+                 (aref (line-ichars (prev (buffer-current-line buffer)))
+                       (buffer-cursor-x buffer)))))
     (prog1
         (cond
-          ((> y 0)
-           (decf (buffer-y buffer)) t)
+          ((> (line-index (buffer-current-line buffer))
+              (line-index (buffer-visible-top-line buffer)))
+           (decf-cursor-y) t)
           ((prev-line)
-           (decf (buffer-y buffer)) t)
+           (decf-cursor-y) t)
           (t nil))
       (normalize-x buffer)
       (redraw-buffer nil buffer))))
 
 (defun cursor-down (&optional (buffer *current-buffer*))
-  (prog1
-      (cond
-        ((< (buffer-y buffer) (buffer-visible-line-max buffer))
-         (incf (buffer-y buffer)) t)
-        ((and (next-line buffer)
-              (< (buffer-y buffer) (buffer-visible-line-max buffer)))
-         (incf (buffer-y buffer)) t)
-        (t nil))
-    (normalize-x buffer)
-    (redraw-buffer nil buffer)))
+  (flet ((incf-cursor-y ()
+           (setf (buffer-cursor buffer)
+                 (aref (line-ichars (next (buffer-current-line buffer)))
+                       (buffer-cursor-x buffer)))))
+    (prog1
+        (cond
+          (#1=(< (line-index (buffer-current-line buffer))
+              (line-index (buffer-max-line buffer)))
+           (incf-cursor-y) t)
+          ((and (next-line buffer)
+                #1#)
+           (incf-cursor-y) t)
+          (t nil))
+      (normalize-x buffer)
+      (redraw-buffer nil buffer))))
 
 (defun cursor-left (&optional (buffer *current-buffer*))
-  (when (> (buffer-x buffer) 0)
-    (decf (buffer-x buffer))
+  (when (> (buffer-cursor-x buffer) 0)
+    (setf (buffer-cursor buffer)
+          (aref (line-ichars (buffer-current-line buffer))
+                (1- (buffer-cursor-x buffer))))
     (redraw-buffer nil buffer)))
 
 (defun cursor-right (&optional (buffer *current-buffer*))
-  (when (< (buffer-x buffer)
+  (when (< (buffer-cursor-x buffer)
            (buffer-x-max buffer))
-    (incf (buffer-x buffer))
+    (setf (buffer-cursor buffer)
+          (aref (line-ichars (buffer-current-line buffer))
+                (1+ (buffer-cursor-x buffer))))
     (redraw-buffer nil buffer)))
 
 (defun cursor-left-most (&optional (buffer *current-buffer*))
-  (setf (buffer-x buffer) 0)
+  (setf (buffer-cursor buffer)
+        (aref (line-ichars (buffer-current-line buffer)) 0))
   (redraw-buffer nil buffer))
 
 (defun cursor-right-most (&optional (buffer *current-buffer*))
-  (setf (buffer-x buffer) (buffer-x-max buffer))
+  (setf (buffer-cursor buffer)
+        (aref (line-ichars (buffer-current-line buffer))
+              (buffer-x-max buffer)))
   (redraw-buffer nil buffer))
 
 
@@ -374,11 +386,11 @@
 ;; delete
 
 (defun delete-line-at-point (y &optional (buffer *current-buffer*))
-  (let ((lines (buffer-lines buffer)))
+  (let ((lines (buffer-top-line buffer)))
     (unless (< (buffer-y buffer) (buffer-visible-line-max buffer))
       (decf (buffer-y buffer)))
     (unless (zerop (length lines))
-      (setf (buffer-lines buffer)
+      (setf (buffer-top-line buffer)
             (concatenate 'vector
                          (subseq lines 0 y)
                          (subseq lines (1+ y))))
@@ -390,8 +402,8 @@
   (delete-line-at-point (buffer-y buffer) buffer))
 
 (defun delete-ichar-at-point (x y &optional (buffer *current-buffer*))
-  (unless (zerop (length (buffer-lines buffer)))
-    (let* ((line (aref (buffer-lines buffer) y))
+  (unless (zerop (length (buffer-top-line buffer)))
+    (let* ((line (aref (buffer-top-line buffer) y))
            (ichars (line-ichars line)))
       (if (zerop (length ichars))
           (delete-line-at-point y buffer)
@@ -419,12 +431,12 @@
 ;; replace
 
 (defun ensure-buffer-has-more-than-one-lines (buffer)
-  (when (zerop (length (buffer-lines buffer)))
-    (setf (buffer-lines buffer) (vector (make-line nil)))))
+  (when (zerop (length (buffer-top-line buffer)))
+    (setf (buffer-top-line buffer) (vector (make-line nil)))))
 
 (defun replace-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
   (ensure-buffer-has-more-than-one-lines buffer)
-  (replace-ichar-at-point ichar x (aref (buffer-lines buffer) y))
+  (replace-ichar-at-point ichar x (aref (buffer-top-line buffer) y))
   (redraw-buffer nil buffer)
   t)
 
@@ -437,8 +449,8 @@
 
 (defun insert-new-line-at-point (y &optional (buffer *current-buffer*))
   (ensure-buffer-has-more-than-one-lines buffer)
-  (let ((lines (buffer-lines buffer)))
-    (setf (buffer-lines buffer)
+  (let ((lines (buffer-top-line buffer)))
+    (setf (buffer-top-line buffer)
           (concatenate 'vector
                        (subseq lines 0 y)
                        (vector (make-line nil))
@@ -455,13 +467,13 @@
 
 (defun insert-eol-at-point (x y &optional (buffer *current-buffer*))
   (ensure-buffer-has-more-than-one-lines buffer)
-  (let* ((lines (buffer-lines buffer))
+  (let* ((lines (buffer-top-line buffer))
          (ichars (line-ichars (aref lines y))))
-    (setf (buffer-lines buffer)
+    (setf (buffer-top-line buffer)
           (concatenate 'vector
                        (subseq lines 0 y)
-                       (list (make-line (subseq ichars 0 x))
-                             (make-line (subseq ichars x)))
+                       (list (make-line (subseq ichars 0 x) t)
+                             (make-line (subseq ichars x) t))
                        (subseq lines (1+ y))))
     (incf (buffer-y buffer))
     (setf (buffer-x buffer) 0)
@@ -473,7 +485,7 @@
 
 (defun insert-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
   (ensure-buffer-has-more-than-one-lines buffer)
-  (insert-ichar-to-line ichar x (aref (buffer-lines buffer) y))
+  (insert-ichar-to-line ichar x (aref (buffer-top-line buffer) y))
   (redraw-buffer)
   t)
 
