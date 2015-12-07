@@ -27,6 +27,7 @@
                   ((:file "bidirectional-link")
                    (:file "attribute")
                    (:file "character")
+                   (:file "bdl-ichar")
                    (:file "line")
                    (:file "string")
                    (:file "mode")

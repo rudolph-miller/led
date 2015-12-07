@@ -40,6 +40,7 @@
            :ichars-width
            :ichars-with-padding
 
+           ;; bdl-ichar
            ;; line
            :make-line
            :line-index
