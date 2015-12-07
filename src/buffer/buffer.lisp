@@ -420,7 +420,7 @@
 
 (defun ensure-buffer-has-more-than-one-lines (buffer)
   (when (zerop (length (buffer-lines buffer)))
-    (setf (buffer-lines buffer) (vector (make-line nil t)))))
+    (setf (buffer-lines buffer) (vector (make-line nil)))))
 
 (defun replace-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
   (ensure-buffer-has-more-than-one-lines buffer)
@@ -441,7 +441,7 @@
     (setf (buffer-lines buffer)
           (concatenate 'vector
                        (subseq lines 0 y)
-                       (vector (make-line nil t))
+                       (vector (make-line nil))
                        (subseq lines y))))
   (normalize-x buffer)
   (redraw-buffer)
@@ -460,8 +460,8 @@
     (setf (buffer-lines buffer)
           (concatenate 'vector
                        (subseq lines 0 y)
-                       (list (make-line (subseq ichars 0 x) t)
-                             (make-line (subseq ichars x) t))
+                       (list (make-line (subseq ichars 0 x))
+                             (make-line (subseq ichars x)))
                        (subseq lines (1+ y))))
     (incf (buffer-y buffer))
     (setf (buffer-x buffer) 0)

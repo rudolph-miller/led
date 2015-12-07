@@ -8,7 +8,11 @@
         :led.internal.key)
   (:export ;; bidirectional-link
            :bd
-           :make-new-bd
+           :make-bd
+           :bd-prev
+           :bd-next
+           :bd-value
+           :bd-index
            :iterate-bd
            :iterate-to-end
            :insert-prev
@@ -28,7 +32,6 @@
            ;; line
            :make-line
            :line-ichars
-           :line-eol-p
            :line-length
            :delete-ichar-of-line
            :replace-ichar-of-line
