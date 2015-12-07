@@ -1,5 +1,5 @@
 (in-package :cl-user)
-(defpackage led.internal.bidirectional-list
+(defpackage led.internal.bidirectional-link
   (:use :cl)
   (:export :bd
            :make-new-bd
@@ -8,7 +8,7 @@
            :insert-prev
            :insert-next
            :delete-bd))
-(in-package :led.internal.bidirectional-list)
+(in-package :led.internal.bidirectional-link)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -22,7 +22,7 @@
 
 (defmethod print-object ((object bd) stream)
   (print-unreadable-object (object stream :type t :identity t)
-    (format stream ":VALUE ~a :INDEX ~a" (bd-value bd) (bd-index object))))
+    (format stream ":VALUE ~a :INDEX ~a" (bd-value object) (bd-index object))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -188,7 +188,8 @@
 
 (defun buffer-migrate-lines (buffer length)
   (loop with top-row = (buffer-top-row buffer)
-        with result = (make-array length :initial-element (make-line nil t))
+        with result = (make-array length :initial-element #())
+        with eol-lines = nil
         with lines = (buffer-lines buffer)
         for y from top-row below (length (buffer-lines buffer))
         with result-length = (length result)
@@ -199,32 +200,30 @@
                  for i = index
                    then (incf index)
                  while (< i result-length)
-                 do (setf (aref result i) (make-line ichars))
+                 do (setf (aref result i) ichars)
                  finally (when (< i result-length)
-                           (setf (line-eol-p (aref result i)) t)))
+                           (push ichars eol-lines)))
         finally (setf (buffer-visible-lines buffer) (apply #'vector visible-lines))
-                (return result)))
+                (return (values result eol-lines))))
 
 ;; FIXME: Support multi buffers (like split window)
 ;; (defun migrate-buffers ())
 
-(defun migrate-buffer-line (line window y start end)
+(defun migrate-buffer-line (ichars eol-p window y start end)
   (loop with win-width = (window-width window)
-        for ichar across (line-ichars-with-padding line (- end start))
+        for ichar across (ichars-with-padding ichars (- end start))
         for x from start below win-width
         do (set-window-ichar x y ichar)
         when (and ichar (> (ichar-width ichar) 1))
           do (incf x)
-        finally (unless (line-eol-p line)
+        finally (unless eol-p
                   (set-window-ichar x y (character-to-ichar #\\)))))
 
 (defun buffer-status-line (buffer)
   (let* ((name (buffer-status buffer))
          (line (when name (string-to-line name))))
     (when line
-      (setf (line-ichars line) (car (fold-ichars (line-ichars line) buffer)))
-      (setf (line-eol-p line) t)
-      line)))
+      (line-ichars line))))
 
 (defun buffer-height-without-status-line (buffer)
   (if (buffer-status buffer)
@@ -233,22 +232,31 @@
 
 (defun migrate-buffer (&optional (buffer *current-buffer*) (window *window*))
   (let* ((status-line (buffer-status-line buffer))
-         (migrate-line-length (buffer-height-without-status-line buffer))
-         (lines (buffer-migrate-lines buffer migrate-line-length)))
-    (multiple-value-bind (x y) (buffer-window-cursor-position buffer)
-      (loop for line across lines
-            for win-row from (buffer-position-y buffer)
-            with win-col-start = (buffer-position-x buffer)
-            with win-col-end = (+ win-col-start (buffer-width buffer))
-            do (migrate-buffer-line line window win-row win-col-start win-col-end)
-            finally (when status-line
-                      (migrate-buffer-line status-line
-                                           window
-                                           (1- (buffer-height buffer))
-                                           win-col-start win-col-end)))
-      (when (eq buffer *current-buffer*)
-        (setf (window-x window) x)
-        (setf (window-y window) y)))))
+         (migrate-line-length (buffer-height-without-status-line buffer)))
+    (multiple-value-bind (lines eol-lines)
+        (buffer-migrate-lines buffer migrate-line-length)
+      (multiple-value-bind (x y) (buffer-window-cursor-position buffer)
+        (loop for ichars across lines
+              for eol-p = (or (zerop (length ichars))
+                              (and (find ichars eol-lines :test #'eq) t))
+              for win-row from (buffer-position-y buffer)
+              with win-col-start = (buffer-position-x buffer)
+              with win-col-end = (+ win-col-start (buffer-width buffer))
+              do (migrate-buffer-line ichars
+                                      eol-p
+                                      window
+                                      win-row
+                                      win-col-start
+                                      win-col-end)
+              finally (when status-line
+                        (migrate-buffer-line status-line
+                                             t
+                                             window
+                                             (1- (buffer-height buffer))
+                                             win-col-start win-col-end)))
+        (when (eq buffer *current-buffer*)
+          (setf (window-x window) x)
+          (setf (window-y window) y))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

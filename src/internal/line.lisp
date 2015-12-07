@@ -9,8 +9,7 @@
            :delete-ichar-of-line
            :replace-ichar-of-line
            :insert-ichar-to-line
-           :string-to-line
-           :line-ichars-with-padding))
+           :string-to-line))
 (in-package :led.internal.line)
 
 
@@ -73,16 +72,3 @@
                      collecting (character-to-ichar character) into result
                      finally (return (apply #'vector result)))))
     (make-line ichars eol-p)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; line-ichars-with-padding
-
-(defun line-ichars-with-padding (line length)
-  (assert (<= (line-length line) length))
-  (loop with result = (make-array length :initial-element nil)
-        with ichars = (line-ichars line)
-        for ichar across ichars
-        for i from 0
-        do (setf (aref result i) ichar)
-           finally (return result)))

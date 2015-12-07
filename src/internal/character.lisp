@@ -8,7 +8,8 @@
            :character-to-ichar
            :char-width
            :ichar-width
-           :ichars-width))
+           :ichars-width
+           :ichars-with-padding))
 (in-package :led.internal.character)
 
 
@@ -50,3 +51,15 @@
         for ichar across ichars
         do (incf result (ichar-width ichar))
         finally (return result)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ichars-with-padding
+
+(defun ichars-with-padding (ichars length)
+  (assert (<= (length ichars) length))
+  (loop with result = (make-array length :initial-element nil)
+        for ichar across ichars
+        for i from 0
+        do (setf (aref result i) ichar)
+           finally (return result)))
