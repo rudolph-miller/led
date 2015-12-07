@@ -13,6 +13,7 @@
            :iterate-to-end
            :insert-prev
            :insert-next
+           :delete-bd
    
            ;; character
            :ichar
