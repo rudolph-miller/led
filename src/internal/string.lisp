@@ -3,6 +3,7 @@
   (:use :cl
         :led.internal.ichar
         :led.internal.bidirectional-link
+        :led.internal.bdl-ichar
         :led.internal.line)
   (:export :string-to-lines
            :lines-to-string))
@@ -27,17 +28,23 @@
 
 (defun lines-chars-length (lines)
   (let ((result 0))
-    (iterate-lines lines (lambda (line) (incf result (1+ (line-ichars-length line)))))
+    (iterate-lines
+     lines
+     (lambda (line)
+       (incf result (1+ (line-bdl-ichars-length line)))))
     result))
 
 (defun lines-to-string (lines)
   (let ((result (make-string (lines-chars-length lines)))
         (pos 0))
-    (iterate-lines lines
-                   (lambda (line)
-                     (loop for ichar across (line-ichars line)
-                           do (setf (elt result pos) (ichar-char ichar))
-                              (incf pos)
-                           finally (setf (elt result pos) #\NewLine)
-                                   (incf pos))))
+    (iterate-lines
+     lines
+     (lambda (line)
+       (iterate-bdl-ichars
+        (line-top-bdl-ichar line)
+        (lambda (bdl-ichar)
+          (setf (elt result pos) (ichar-char (bdl-ichar-ichar bdl-ichar)))
+          (incf pos)))
+        (setf (elt result pos) #\NewLine)
+        (incf pos)))
     result))
