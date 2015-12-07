@@ -24,11 +24,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; line
 
-(defstruct (line (:include bd)
+(defstruct (line (:include bdl)
                  (:constructor %make-line)))
 
 (defun line-ichars (line)
-  (bd-value line))
+  (bdl-value line))
 
 (defun line-string (line)
   (with-output-to-string (stream)
@@ -39,7 +39,7 @@
   (print-unreadable-object (object stream :type t :identity t)
     (format stream
             ":INDEX ~a :CONTENTS ~a"
-            (bd-index object)
+            (bdl-index object)
             (line-string object))))
 
 
@@ -60,7 +60,7 @@
 ;; make-top-line
 
 (defun make-top-line ()
-  (make-top-bd))
+  (make-top-bdl))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -106,14 +106,14 @@
 ;; delete-line
 
 (defun delete-line (line)
-  (delete-bd line))
+  (delete-bdl line))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; line-length
 
 (defun line-length (top-line)
-  (bd-length top-line))
+  (bdl-length top-line))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

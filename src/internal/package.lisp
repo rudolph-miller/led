@@ -7,28 +7,28 @@
         :led.internal.mode
         :led.internal.key)
   (:export ;; bidirectional-link
-           :bd
-           :make-bd
-           :make-top-bd
-           :top-bd-p
-           :bd-length
-           :bd-index+
-           :bd-index-
-           :bd-index=
-           :bd-index<
-           :bd-index<=
-           :bd-index>
-           :bd-index>=
+           :bdl
+           :make-bdl
+           :make-top-bdl
+           :top-bdl-p
+           :bdl-length
+           :bdl-index+
+           :bdl-index-
+           :bdl-index=
+           :bdl-index<
+           :bdl-index<=
+           :bdl-index>
+           :bdl-index>=
            :prev
            :next
-           :bd-value
-           :bd-index
-           :iterate-bd
+           :bdl-value
+           :bdl-index
+           :iterate-bdl
            :iterate-to-end
            :get-by-index
            :insert-prev
            :insert-next
-           :delete-bd
+           :delete-bdl
    
            ;; character
            :ichar

@@ -1,40 +1,40 @@
 (in-package :cl-user)
 (defpackage led.internal.bidirectional-link
   (:use :cl)
-  (:export :bd
-           :make-bd
-           :make-top-bd
-           :top-bd-p
-           :bd-length
-           :bd-index+
-           :bd-index-
-           :bd-index=
-           :bd-index<
-           :bd-index<=
-           :bd-index>
-           :bd-index>=
+  (:export :bdl
+           :make-bdl
+           :make-top-bdl
+           :top-bdl-p
+           :bdl-length
+           :bdl-index+
+           :bdl-index-
+           :bdl-index=
+           :bdl-index<
+           :bdl-index<=
+           :bdl-index>
+           :bdl-index>=
            :prev
            :next
-           :bd-value
-           :bd-index
+           :bdl-value
+           :bdl-index
            :iterate-to-end
            :get-by-index
            :insert-prev
            :insert-next
-           :delete-bd))
+           :delete-bdl))
 (in-package :led.internal.bidirectional-link)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; globals
 
-(defvar +top-index+ +top-index+)
+(defvar +top-index+ :dummy)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; bd
+;; bdl
 
-(defstruct bd
+(defstruct bdl
   prev
   next
   value
@@ -42,78 +42,78 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; make-new-bd
+;; make-new-bdl
 
-(defun make-top-bd ()
-  (let ((bd (make-bd :index +top-index+)))
-    (setf (bd-prev bd) bd)
-    (setf (bd-next bd) bd)
-    bd))
+(defun make-top-bdl ()
+  (let ((bdl (make-bdl :index +top-index+)))
+    (setf (bdl-prev bdl) bdl)
+    (setf (bdl-next bdl) bdl)
+    bdl))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; top-bd-p
-
-(defun top-bd-p (bd)
-  (eql (bd-index bd) +top-index+))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; bd-legth
+;; top-bdl-p
 
-(defun bd-length (bd)
-  (assert (top-bd-p bd))
-  (let ((prev (bd-prev bd)))
-    (if (top-bd-p prev)
+(defun top-bdl-p (bdl)
+  (eql (bdl-index bdl) +top-index+))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; bdl-legth
+
+(defun bdl-length (bdl)
+  (assert (top-bdl-p bdl))
+  (let ((prev (bdl-prev bdl)))
+    (if (top-bdl-p prev)
         0
-        (1+ (bd-index prev)))))
+        (1+ (bdl-index prev)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; print-object
 
-(defmethod print-object ((object bd) stream)
-  (if (top-bd-p object)
+(defmethod print-object ((object bdl) stream)
+  (if (top-bdl-p object)
       (print-unreadable-object (object stream :identity t)
-        (format stream "TOP-BD :LENGTH ~a" (bd-length object)))
+        (format stream "TOP-BDL :LENGTH ~a" (bdl-length object)))
       (print-unreadable-object (object stream :type t :identity t)
-        (format stream ":VALUE ~a :INDEX ~a" (bd-value object) (bd-index object)))))
+        (format stream ":VALUE ~a :INDEX ~a" (bdl-value object) (bdl-index object)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; bd-index culculation
+;; bdl-index culculation
 
-(defmacro def-bd-index-calc (symbol)
-  `(defun ,(intern (format nil "BD-INDEX~a" symbol)) (&rest bds)
-     (apply ',symbol (mapcar #'bd-index bds))))
+(defmacro def-bdl-index-calc (symbol)
+  `(defun ,(intern (format nil "BDL-INDEX~a" symbol)) (&rest bdls)
+     (apply ',symbol (mapcar #'bdl-index bdls))))
 
-(def-bd-index-calc +)
-(def-bd-index-calc -)
-(def-bd-index-calc =)
-(def-bd-index-calc <)
-(def-bd-index-calc <=)
-(def-bd-index-calc >)
-(def-bd-index-calc >=)
+(def-bdl-index-calc +)
+(def-bdl-index-calc -)
+(def-bdl-index-calc =)
+(def-bdl-index-calc <)
+(def-bdl-index-calc <=)
+(def-bdl-index-calc >)
+(def-bdl-index-calc >=)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; prev and next
 
-(defun prev (bd)
-  (let ((prev (bd-prev bd)))
-    (unless (top-bd-p prev)
+(defun prev (bdl)
+  (let ((prev (bdl-prev bdl)))
+    (unless (top-bdl-p prev)
       prev)))
 
-(defun next (bd)
-  (let ((next (bd-next bd)))
-    (unless (top-bd-p next)
+(defun next (bdl)
+  (let ((next (bdl-next bdl)))
+    (unless (top-bdl-p next)
       next)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; iterate
 
-(defun iterate-to-end (bd fn)
-  (loop for item = (if (top-bd-p bd) (next bd) bd)
+(defun iterate-to-end (bdl fn)
+  (loop for item = (if (top-bdl-p bdl) (next bdl) bdl)
           then (next item)
         while item
         do (funcall fn item)))
@@ -122,54 +122,54 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; get-by-index
 
-(defun get-by-index (index bd)
-  (assert (> index (bd-index bd)))
+(defun get-by-index (index bdl)
+  (assert (> index (bdl-index bdl)))
   (iterate-to-end
-   bd
+   bdl
    (lambda (item)
-     (when (= (bd-index item) index)
+     (when (= (bdl-index item) index)
        (return-from get-by-index item)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; insert-prev
 
-(defun insert-prev (new-bd bd)
-  (assert (not (top-bd-p bd)))
-  (let ((prev (bd-prev bd)))
-    (setf (bd-index new-bd) (bd-index bd))
-    (setf (bd-prev new-bd) (bd-prev prev))
-    (setf (bd-next new-bd) bd)
-    (setf (bd-prev bd) new-bd)
-    (setf (bd-next prev) new-bd)
-    (iterate-to-end bd #'(lambda (bd) (incf (bd-index bd))))
-    new-bd))
+(defun insert-prev (new-bdl bdl)
+  (assert (not (top-bdl-p bdl)))
+  (let ((prev (bdl-prev bdl)))
+    (setf (bdl-index new-bdl) (bdl-index bdl))
+    (setf (bdl-prev new-bdl) (bdl-prev prev))
+    (setf (bdl-next new-bdl) bdl)
+    (setf (bdl-prev bdl) new-bdl)
+    (setf (bdl-next prev) new-bdl)
+    (iterate-to-end bdl #'(lambda (bdl) (incf (bdl-index bdl))))
+    new-bdl))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; insert-next
 
-(defun insert-next (new-bd bd)
-  (let ((next (bd-next bd)))
-    (setf (bd-index new-bd) (if (top-bd-p bd)
+(defun insert-next (new-bdl bdl)
+  (let ((next (bdl-next bdl)))
+    (setf (bdl-index new-bdl) (if (top-bdl-p bdl)
                                 0
-                                (1+ (bd-index bd))))
-    (setf (bd-prev new-bd) bd)
-    (setf (bd-next new-bd) next)
-    (unless (top-bd-p next)
-      (iterate-to-end next #'(lambda (bd) (incf (bd-index bd)))))
-    (setf (bd-next bd) new-bd)
-    (setf (bd-prev next) new-bd)
-    new-bd))
+                                (1+ (bdl-index bdl))))
+    (setf (bdl-prev new-bdl) bdl)
+    (setf (bdl-next new-bdl) next)
+    (unless (top-bdl-p next)
+      (iterate-to-end next #'(lambda (bdl) (incf (bdl-index bdl)))))
+    (setf (bdl-next bdl) new-bdl)
+    (setf (bdl-prev next) new-bdl)
+    new-bdl))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; delete-bd
+;; delete-bdl
 
-(defun delete-bd (bd)
-  (let ((prev (bd-prev bd))
-        (next (bd-next bd)))
-    (unless (zerop (bd-index next))
-      (iterate-to-end next #'(lambda (bd) (decf (bd-index bd)))))
-    (setf (bd-next prev) next)
-    (setf (bd-prev next) prev)
+(defun delete-bdl (bdl)
+  (let ((prev (bdl-prev bdl))
+        (next (bdl-next bdl)))
+    (unless (zerop (bdl-index next))
+      (iterate-to-end next #'(lambda (bdl) (decf (bdl-index bdl)))))
+    (setf (bdl-next prev) next)
+    (setf (bdl-prev next) prev)
     t))
