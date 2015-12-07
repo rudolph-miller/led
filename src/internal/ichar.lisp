@@ -1,5 +1,5 @@
 (in-package :cl-user)
-(defpackage led.internal.character
+(defpackage led.internal.ichar
   (:use :cl)
   (:export :ichar
            :make-ichar
@@ -10,7 +10,7 @@
            :ichar-width
            :ichars-width
            :ichars-with-padding))
-(in-package :led.internal.character)
+(in-package :led.internal.ichar)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

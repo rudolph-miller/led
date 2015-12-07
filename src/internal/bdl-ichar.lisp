@@ -2,7 +2,7 @@
 (defpackage led.internal.bdl-ichar
   (:use :cl
         :led.internal.bidirectional-link
-        :led.internal.character)
+        :led.internal.ichar)
   (:export :bdl-ichar
            :bdl-ichar-ichar
            :make-top-bdl-ichar

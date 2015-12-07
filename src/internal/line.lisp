@@ -2,11 +2,11 @@
 (defpackage led.internal.line
   (:use :cl
         :led.internal.bidirectional-link
-        :led.internal.character
+        :led.internal.ichar
         :led.internal.bdl-ichar)
   (:export :make-line
            :line-index
-           :line-bdl-ichars
+           :line-top-bdl-ichar
            :line-string
            :bdl-ichar-line
            :make-top-line

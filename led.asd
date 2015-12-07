@@ -26,7 +26,7 @@
                   :components
                   ((:file "bidirectional-link")
                    (:file "attribute")
-                   (:file "character")
+                   (:file "ichar")
                    (:file "bdl-ichar")
                    (:file "line")
                    (:file "string")

@@ -1,7 +1,7 @@
 (in-package :cl-user)
 (defpackage led.internal.string
   (:use :cl
-        :led.internal.character
+        :led.internal.ichar
         :led.internal.bidirectional-link
         :led.internal.line)
   (:export :string-to-lines

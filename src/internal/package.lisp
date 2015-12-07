@@ -1,7 +1,8 @@
 (in-package :cl-user)
 (defpackage led.internal
   (:use :led.internal.bidirectional-link
-        :led.internal.character
+        :led.internal.ichar
+        :led.internal.bdl-ichar
         :led.internal.line
         :led.internal.string
         :led.internal.mode
@@ -30,7 +31,7 @@
            :replace-bdl
            :delete-bdl
    
-           ;; character
+           ;; ichar
            :ichar
            :ichar-char
            :ichar-attr
@@ -55,14 +56,11 @@
            ;; line
            :make-line
            :line-index
-           :line-ichars
+           :line-top-bdl-ichar
            :bdl-ichar-line
            :make-top-line
            :line-length
-           :line-ichars-length
-           :delete-ichar-of-line
-           :replace-ichar-of-line
-           :insert-ichar-to-line
+           :line-bdl-ichars-length
            :string-to-line
            :iterate-lines
 
