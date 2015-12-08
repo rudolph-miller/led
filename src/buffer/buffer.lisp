@@ -331,7 +331,7 @@
                   (next-top-bdl-ichar (line-top-bdl-ichar next)))
              (setf (buffer-cursor buffer)
                    (or (get-by-index index next-top-bdl-ichar)
-                       (get-first next-top-bdl-ichar)
+                       (get-last next-top-bdl-ichar)
                        next-top-bdl-ichar)))))
     (prog1
         (cond
@@ -384,7 +384,14 @@
     (redraw-buffer nil buffer)))
 
 (defun delete-ichar (&optional (buffer *current-buffer*))
-  (delete-ichar-at-point (buffer-x buffer) (buffer-y buffer) buffer))
+  (let ((cursor (buffer-cursor buffer)))
+    (when (or (cursor-right)
+              (cursor-left)
+              (and (not (top-bdl-p cursor))
+                   (setf (buffer-cursor buffer)
+                         (line-top-bdl-ichar (buffer-current-line buffer)))))
+      (delete-bdl cursor)
+      (redraw-buffer buffer))))
 
 (defun delete-prev-ichar (&optional (buffer *current-buffer*))
   (when (delete-ichar-at-point (max (1- (buffer-x buffer)) 0)
