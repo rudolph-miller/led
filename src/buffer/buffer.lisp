@@ -286,7 +286,8 @@
                   (prev-top-bdl-ichar (line-top-bdl-ichar prev)))
              (setf (buffer-cursor buffer)
                    (or (get-by-index index prev-top-bdl-ichar)
-                       (get-last prev-top-bdl-ichar))))))
+                       (get-last prev-top-bdl-ichar)
+                       prev-top-bdl-ichar)))))
     (prog1
         (cond
           ((bdl-index> (buffer-current-line buffer)
@@ -304,7 +305,8 @@
                   (next-top-bdl-ichar (line-top-bdl-ichar next)))
              (setf (buffer-cursor buffer)
                    (or (get-by-index index next-top-bdl-ichar)
-                       (get-first next-top-bdl-ichar))))))
+                       (get-first next-top-bdl-ichar)
+                       next-top-bdl-ichar)))))
     (prog1
         (cond
           (#1=(bdl-index< (buffer-current-line buffer)

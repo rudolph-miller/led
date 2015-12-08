@@ -30,9 +30,7 @@
     (iterate-bdl-ichars
      (line-top-bdl-ichar line)
      (lambda (bdl-ichar)
-       (if (dummy-bdl-p bdl-ichar)
-         (write-string ":DUMMY" stream)
-         (write-char (ichar-char (bdl-ichar-ichar bdl-ichar)) stream))))))
+       (write-char (ichar-char (bdl-ichar-ichar bdl-ichar)) stream)))))
 
 (defmethod print-object ((object line) stream)
   (print-unreadable-object (object stream :type t :identity t)
@@ -61,17 +59,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; make-line
 
-(defun make-line (string &optional dummy)
+(defun make-line (string)
   (let* ((bdl-ichar (make-top-bdl-ichar))
-         (line (if dummy
-                   (make-dummy-bdl :value bdl-ichar)
-                   (%make-line :value bdl-ichar))))
-    (if (and string (> (length string) 0))
-        (loop for char across string
-              for got = (insert-next (make-bdl-ichar char) bdl-ichar)
-                then (insert-next (make-bdl-ichar char) got)
-              do (setf (gethash got *bdl-ichar-line-table*) line))
-        (insert-next (make-dummy-bdl) bdl-ichar))
+         (line (%make-line :value bdl-ichar)))
+    (when (and string (> (length string) 0))
+      (loop for char across string
+            for got = (insert-next (make-bdl-ichar char) bdl-ichar)
+              then (insert-next (make-bdl-ichar char) got)
+            do (setf (gethash got *bdl-ichar-line-table*) line)))
     line))
 
 

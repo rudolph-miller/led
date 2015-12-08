@@ -15,11 +15,13 @@
 
 (defun string-to-lines (string)
   (let ((top-line (make-top-line)))
-    (loop with stream = (make-string-input-stream string)
-          for got = (read-line stream nil nil)
-          while got
-          for line = (insert-next (make-line got) top-line)
-            then (insert-next (make-line got) line))
+    (if string
+        (loop with stream = (make-string-input-stream string)
+              for got = (read-line stream nil nil)
+              while got
+              for line = (insert-next (make-line got) top-line)
+                then (insert-next (make-line got) line))
+        (insert-next (make-line nil t) top-line))
     top-line))
 
 

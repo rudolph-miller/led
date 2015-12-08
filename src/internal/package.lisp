@@ -12,8 +12,6 @@
            :make-bdl
            :make-top-bdl
            :top-bdl-p
-           :make-dummy-bdl
-           :dummy-bdl-p
            :bdl-length
            :bdl-index+
            :bdl-index-
