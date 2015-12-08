@@ -7,7 +7,7 @@
            :bdl-ichar-index
            :bdl-ichar-ichar
            :make-top-bdl-ichar
-           :make-dbl-ichar
+           :make-bdl-ichar
            :bdl-ichar-length
            :iterate-bdl-ichars
            :bdl-ichars-to-ichars))

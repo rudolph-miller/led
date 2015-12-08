@@ -8,10 +8,9 @@
            :buffer
            :buffer-position-x
            :buffer-position-y
-           :buffer-height
            :buffer-width
-           :buffer-x
-           :buffer-y
+           :buffer-height
+           :buffer-cursor
            :buffer-top-row
            :buffer-status
            :buffer-top-line
@@ -139,9 +138,7 @@
 
 (defun set-buffer-content (string &optional (buffer *current-buffer*))
   (prog1 (setf (buffer-top-line buffer)
-               (if string
-                   (string-to-lines string)
-                   (make-line nil)))
+               (string-to-lines string))
     (initialize-cursor buffer)))
 
 
@@ -305,13 +302,13 @@
            (let* ((index (bdl-ichar-index (buffer-cursor buffer)))
                   (next (next (buffer-current-line buffer)))
                   (next-top-bdl-ichar (line-top-bdl-ichar next)))
-           (setf (buffer-cursor buffer)
-                 (or (get-by-index index next-top-bdl-ichar)
-                     (get-first next-top-bdl-ichar))))))
+             (setf (buffer-cursor buffer)
+                   (or (get-by-index index next-top-bdl-ichar)
+                       (get-first next-top-bdl-ichar))))))
     (prog1
         (cond
           (#1=(bdl-index< (buffer-current-line buffer)
-                          (buffer-max-line buffer))
+                          (buffer-visible-bottom-line buffer))
               (incf-cursor-y) t)
           ((and (next-line buffer)
                 #1#)
@@ -345,21 +342,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; delete
 
-(defun delete-line-at-point (y &optional (buffer *current-buffer*))
-  (let ((lines (buffer-top-line buffer)))
-    (unless (< (buffer-y buffer) (buffer-visible-line-max buffer))
-      (decf (buffer-y buffer)))
-    (unless (zerop (length lines))
-      (setf (buffer-top-line buffer)
-            (concatenate 'vector
-                         (subseq lines 0 y)
-                         (subseq lines (1+ y))))
-      (normalize-x buffer)
-      (redraw-buffer)
-      t)))
-
 (defun delete-line (&optional (buffer *current-buffer*))
-  (delete-line-at-point (buffer-y buffer) buffer))
+  (let ((current-line (buffer-current-line buffer)))
+    (cursor-down)
+    (delete-bdl current-line)
+    (redraw-buffer nil buffer)))
 
 (defun delete-ichar-at-point (x y &optional (buffer *current-buffer*))
   (unless (zerop (length (buffer-top-line buffer)))

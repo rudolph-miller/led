@@ -4,12 +4,12 @@
         :led.internal.bidirectional-link
         :led.internal.ichar
         :led.internal.bdl-ichar)
-  (:export :make-line
-           :line-index
+  (:export :line-index
            :line-top-bdl-ichar
            :line-string
            :bdl-ichar-line
            :make-top-line
+           :make-line
            :line-length
            :line-bdl-ichars-length
            :iterate-lines))
@@ -30,7 +30,9 @@
     (iterate-bdl-ichars
      (line-top-bdl-ichar line)
      (lambda (bdl-ichar)
-       (write-char (ichar-char (bdl-ichar-ichar bdl-ichar)) stream)))))
+       (if (dummy-bdl-p bdl-ichar)
+         (write-string ":DUMMY" stream)
+         (write-char (ichar-char (bdl-ichar-ichar bdl-ichar)) stream))))))
 
 (defmethod print-object ((object line) stream)
   (print-unreadable-object (object stream :type t :identity t)
@@ -59,14 +61,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; make-line
 
-(defun make-line (string)
+(defun make-line (string &optional dummy)
   (let* ((bdl-ichar (make-top-bdl-ichar))
-         (line (%make-line :value bdl-ichar)))
-    (when string
-      (loop for char across string
-            for got = (insert-next-bdl-ichar char bdl-ichar)
-              then (insert-next-bdl-ichar char got)
-            do (setf (gethash got *bdl-ichar-line-table*) line)))
+         (line (if dummy
+                   (make-dummy-bdl :value bdl-ichar)
+                   (%make-line :value bdl-ichar))))
+    (if (and string (> (length string) 0))
+        (loop for char across string
+              for got = (insert-next (make-bdl-ichar char) bdl-ichar)
+                then (insert-next (make-bdl-ichar char) got)
+              do (setf (gethash got *bdl-ichar-line-table*) line))
+        (insert-next (make-dummy-bdl) bdl-ichar))
     line))
 
 

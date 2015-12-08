@@ -12,6 +12,8 @@
            :make-bdl
            :make-top-bdl
            :top-bdl-p
+           :make-dummy-bdl
+           :dummy-bdl-p
            :bdl-length
            :bdl-index+
            :bdl-index-
@@ -45,20 +47,20 @@
 
            ;; bdl-ichar
            :bdl-ichar
-           :bdl-ichar-ichar
            :bdl-ichar-index
+           :bdl-ichar-ichar
            :make-top-bdl-ichar
-           :make-dbl-ichar
+           :make-bdl-ichar
            :bdl-ichar-length
            :iterate-bdl-ichars
            :bdl-ichars-to-ichars
 
            ;; line
-           :make-line
            :line-index
            :line-top-bdl-ichar
            :bdl-ichar-line
            :make-top-line
+           :make-line
            :line-length
            :line-bdl-ichars-length
            :iterate-lines

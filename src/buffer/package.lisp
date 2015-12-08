@@ -8,7 +8,6 @@
            :*buffers*
            :buffer
            :buffer-status
-           :buffer-lines
            :redraw-buffer
            :prev-line
            :next-line

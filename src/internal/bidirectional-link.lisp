@@ -5,6 +5,8 @@
            :make-bdl
            :make-top-bdl
            :top-bdl-p
+           :make-dummy-bdl
+           :dummy-bdl-p
            :bdl-length
            :bdl-index+
            :bdl-index-
@@ -31,7 +33,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; globals
 
-(defvar +top-index+ :dummy)
+(defvar +top-index+ :top)
+
+(defvar +dummy-value+ :dummy)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -45,7 +49,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; make-new-bdl
+;; top-bdl
 
 (defun make-top-bdl ()
   (let ((bdl (make-bdl :index +top-index+)))
@@ -53,12 +57,19 @@
     (setf (bdl-next bdl) bdl)
     bdl))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; top-bdl-p
-
 (defun top-bdl-p (bdl)
   (eql (bdl-index bdl) +top-index+))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; dummy-bdl
+
+(defun make-dummy-bdl (&key value)
+  (make-bdl :index +dummy-value+ :value value))
+
+(defun dummy-bdl-p (bdl)
+  (eql (bdl-index bdl) +dummy-value+))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; bdl-legth
@@ -66,7 +77,8 @@
 (defun bdl-length (bdl)
   (assert (top-bdl-p bdl))
   (let ((prev (bdl-prev bdl)))
-    (if (top-bdl-p prev)
+    (if (or (top-bdl-p prev)
+            (dummy-bdl-p prev))
         0
         (1+ (bdl-index prev)))))
 
@@ -75,11 +87,16 @@
 ;; print-object
 
 (defmethod print-object ((object bdl) stream)
-  (if (top-bdl-p object)
-      (print-unreadable-object (object stream :identity t)
-        (format stream "TOP-BDL :LENGTH ~a" (bdl-length object)))
+  (cond
+    ((top-bdl-p object)
+     (print-unreadable-object (object stream :identity t)
+       (format stream "TOP-BDL :LENGTH ~a" (bdl-length object))))
+    ((dummy-bdl-p object)
+     (print-unreadable-object (object stream :identity t)
+       (format stream "DUMMY-BDL")))
+    (t
       (print-unreadable-object (object stream :type t :identity t)
-        (format stream ":VALUE ~a :INDEX ~a" (bdl-value object) (bdl-index object)))))
+        (format stream ":VALUE ~a :INDEX ~a" (bdl-value object) (bdl-index object))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -154,6 +171,8 @@
 
 (defun insert-prev (new-bdl bdl)
   (assert (not (top-bdl-p bdl)))
+  (assert (not (dummy-bdl-p bdl)))
+  (assert (not (dummy-bdl-p new-bdl)))
   (let ((prev (bdl-prev bdl)))
     (setf (bdl-index new-bdl) (bdl-index bdl))
     (setf (bdl-prev new-bdl) (bdl-prev prev))
@@ -168,13 +187,18 @@
 ;; insert-next
 
 (defun insert-next (new-bdl bdl)
+  (assert (not (dummy-bdl-p bdl)))
+  (assert (not (and (next bdl)
+                    (dummy-bdl-p (next bdl)))))
   (let ((next (bdl-next bdl)))
-    (setf (bdl-index new-bdl) (if (top-bdl-p bdl)
-                                0
-                                (1+ (bdl-index bdl))))
+    (unless (dummy-bdl-p new-bdl)
+      (setf (bdl-index new-bdl) (if (top-bdl-p bdl)
+                                    0
+                                    (1+ (bdl-index bdl)))))
     (setf (bdl-prev new-bdl) bdl)
     (setf (bdl-next new-bdl) next)
-    (unless (top-bdl-p next)
+    (unless (or (top-bdl-p next)
+                (dummy-bdl-p new-bdl))
       (iterate-bdl next #'(lambda (bdl) (incf (bdl-index bdl)))))
     (setf (bdl-next bdl) new-bdl)
     (setf (bdl-prev next) new-bdl)
@@ -185,6 +209,9 @@
 ;; replace-bdl
 
 (defun replace-bdl (new-bdl bdl)
+  (assert (not (top-bdl-p bdl)))
+  (assert (not (dummy-bdl-p bdl)))
+  (assert (not (dummy-bdl-p new-bdl)))
   (let ((prev (bdl-prev bdl))
         (next (bdl-next bdl)))
     (setf (bdl-prev new-bdl) prev)
@@ -198,6 +225,7 @@
 ;; delete-bdl
 
 (defun delete-bdl (bdl)
+  (assert (not (top-bdl-p bdl)))
   (let ((prev (bdl-prev bdl))
         (next (bdl-next bdl)))
     (unless (zerop (bdl-index next))

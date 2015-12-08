@@ -18,8 +18,8 @@
     (loop with stream = (make-string-input-stream string)
           for got = (read-line stream nil nil)
           while got
-          for line = (insert-next-line got top-line)
-            then (insert-next-line got line))
+          for line = (insert-next (make-line got) top-line)
+            then (insert-next (make-line got) line))
     top-line))
 
 
