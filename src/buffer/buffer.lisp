@@ -370,6 +370,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; delete
 
+;; FIXME: empty line
 (defun delete-line (&optional (buffer *current-buffer*))
   (let ((current-line (buffer-current-line buffer)))
     (cond
@@ -381,7 +382,8 @@
     (delete-bdl current-line)
     (when (eq current-line (buffer-visible-bottom-line buffer))
       (cursor-down buffer))
-    (redraw-buffer nil buffer)))
+    (redraw-buffer nil buffer)
+    t))
 
 (defun delete-ichar (&optional (buffer *current-buffer*))
   (let ((cursor (buffer-cursor buffer)))
@@ -391,17 +393,15 @@
                    (setf (buffer-cursor buffer)
                          (line-top-bdl-ichar (buffer-current-line buffer)))))
       (delete-bdl cursor)
-      (redraw-buffer buffer))))
+      (redraw-buffer nil buffer)
+      t)))
 
 (defun delete-prev-ichar (&optional (buffer *current-buffer*))
-  (when (delete-ichar-at-point (max (1- (buffer-x buffer)) 0)
-                               (buffer-y buffer)
-                               buffer)
-    (when (and (> (buffer-x buffer) 0)
-               (< (buffer-x buffer) (buffer-x-max buffer)))
-      (decf (buffer-x buffer))
-      (redraw-buffer))
-    t))
+  (let ((prev (prev (buffer-cursor buffer))))
+    (when prev
+      (delete-bdl prev)
+      (redraw-buffer nil buffer)
+      t)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
