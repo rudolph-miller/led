@@ -185,9 +185,9 @@
 (defun buffer-board (buffer length)
   (loop with result = (make-array length :initial-element #())
         with eol-lines = nil
-        with position
         with cursor = (buffer-cursor buffer)
-        with cursor-ichar = (and cursor (bdl-ichar-ichar cursor))
+        with cursor-ichar = (when cursor (bdl-ichar-ichar cursor))
+        with position = (unless cursor (cons 0 0))
         for index from 0 below length
         for prev-line = nil then line
         for line = (buffer-visible-top-line buffer) then (next line)
@@ -314,15 +314,16 @@
                    (or (get-by-index index prev-top-bdl-ichar)
                        (get-last prev-top-bdl-ichar)
                        prev-top-bdl-ichar)))))
-    (prog1
-        (cond
-          ((bdl-index> (buffer-current-line buffer)
-                       (buffer-visible-top-line buffer))
-           (decf-cursor-y) t)
-          ((prev-line)
-           (decf-cursor-y) t)
-          (t nil))
-      (redraw-buffer nil buffer))))
+    (when (buffer-cursor buffer)
+      (prog1
+          (cond
+            ((bdl-index> (buffer-current-line buffer)
+                         (buffer-visible-top-line buffer))
+             (decf-cursor-y) t)
+            ((prev-line)
+             (decf-cursor-y) t)
+            (t nil))
+        (redraw-buffer nil buffer)))))
 
 (defun cursor-down (&optional (buffer *current-buffer*))
   (flet ((incf-cursor-y ()
@@ -333,38 +334,47 @@
                    (or (get-by-index index next-top-bdl-ichar)
                        (get-last next-top-bdl-ichar)
                        next-top-bdl-ichar)))))
-    (prog1
-        (cond
-          (#1=(bdl-index< (buffer-current-line buffer)
-                          (buffer-visible-bottom-line buffer))
-              (incf-cursor-y) t)
-          ((and (next-line buffer)
-                #1#)
-           (incf-cursor-y) t)
-          (t nil))
-      (redraw-buffer nil buffer))))
+    (when (buffer-cursor buffer)
+      (prog1
+          (cond
+            (#1=(bdl-index< (buffer-current-line buffer)
+                            (buffer-visible-bottom-line buffer))
+                (incf-cursor-y) t)
+            ((and (next-line buffer)
+                  #1#)
+             (incf-cursor-y) t)
+            (t nil))
+        (redraw-buffer nil buffer)))))
 
 (defun cursor-left (&optional (buffer *current-buffer*))
-  (when (prev (buffer-cursor buffer))
+  (when (and (buffer-cursor buffer)
+             (prev (buffer-cursor buffer)))
     (setf (buffer-cursor buffer)
           (prev (buffer-cursor buffer)))
-    (redraw-buffer nil buffer)))
+    (redraw-buffer nil buffer)
+    t))
 
 (defun cursor-right (&optional (buffer *current-buffer*))
-  (when (next (buffer-cursor buffer))
+  (when (and (buffer-cursor buffer)
+             (next (buffer-cursor buffer)))
     (setf (buffer-cursor buffer)
           (next (buffer-cursor buffer)))
-    (redraw-buffer nil buffer)))
+    (redraw-buffer nil buffer)
+    t))
 
 (defun cursor-left-most (&optional (buffer *current-buffer*))
-  (setf (buffer-cursor buffer)
-        (get-first (line-top-bdl-ichar (buffer-current-line buffer))))
-  (redraw-buffer nil buffer))
+  (when (buffer-cursor buffer)
+    (setf (buffer-cursor buffer)
+          (get-first (line-top-bdl-ichar (buffer-current-line buffer))))
+    (redraw-buffer nil buffer)
+    t))
 
 (defun cursor-right-most (&optional (buffer *current-buffer*))
-  (setf (buffer-cursor buffer)
-        (get-last (line-top-bdl-ichar (buffer-current-line buffer))))
-  (redraw-buffer nil buffer))
+  (when (buffer-cursor buffer)
+    (setf (buffer-cursor buffer)
+          (get-last (line-top-bdl-ichar (buffer-current-line buffer))))
+    (redraw-buffer nil buffer)
+    t))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -372,36 +382,39 @@
 
 ;; FIXME: empty line
 (defun delete-line (&optional (buffer *current-buffer*))
-  (let ((current-line (buffer-current-line buffer)))
-    (cond
-      ((eq current-line (buffer-visible-top-line buffer))
-        (next-line buffer))
-      ((eq current-line (buffer-visible-bottom-line buffer))
-       (cursor-up buffer))
-      (t (cursor-down buffer)))
-    (delete-bdl current-line)
-    (when (eq current-line (buffer-visible-bottom-line buffer))
-      (cursor-down buffer))
-    (redraw-buffer nil buffer)
-    t))
+  (when (buffer-cursor buffer)
+    (let ((current-line (buffer-current-line buffer)))
+      (cond
+        ((eq current-line (buffer-visible-top-line buffer))
+         (next-line buffer))
+        ((eq current-line (buffer-visible-bottom-line buffer))
+         (cursor-up buffer))
+        (t (cursor-down buffer)))
+      (delete-bdl current-line)
+      (when (eq current-line (buffer-visible-bottom-line buffer))
+        (cursor-down buffer))
+      (redraw-buffer nil buffer)
+      t)))
 
 (defun delete-ichar (&optional (buffer *current-buffer*))
   (let ((cursor (buffer-cursor buffer)))
-    (when (or (cursor-right)
-              (cursor-left)
-              (and (not (top-bdl-p cursor))
-                   (setf (buffer-cursor buffer)
-                         (line-top-bdl-ichar (buffer-current-line buffer)))))
+    (when (and cursor
+               (or (cursor-right)
+                   (cursor-left)
+                   (and (not (top-bdl-p cursor))
+                        (setf (buffer-cursor buffer)
+                              (line-top-bdl-ichar (buffer-current-line buffer)))))
       (delete-bdl cursor)
       (redraw-buffer nil buffer)
-      t)))
+      t))))
 
 (defun delete-prev-ichar (&optional (buffer *current-buffer*))
-  (let ((prev (prev (buffer-cursor buffer))))
-    (when prev
-      (delete-bdl prev)
-      (redraw-buffer nil buffer)
-      t)))
+  (when (buffer-cursor buffer)
+    (let ((prev (prev (buffer-cursor buffer))))
+      (when prev
+        (delete-bdl prev)
+        (redraw-buffer nil buffer)
+        t))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
