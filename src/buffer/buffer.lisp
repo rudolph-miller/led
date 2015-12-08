@@ -185,10 +185,15 @@
 (defun buffer-board (buffer length)
   (loop with result = (make-array length :initial-element #())
         with eol-lines = nil
+        with position
+        with cursor = (buffer-cursor buffer)
+        with cursor-ichar = (and cursor (bdl-ichar-ichar cursor))
         for index from 0 below length
         for prev-line = nil then line
         for line = (buffer-visible-top-line buffer) then (next line)
         while line
+        when (eq cursor (line-top-bdl-ichar line))
+          do (setq position (cons 0 index))
         do (loop for ichars
                    in (fold-ichars (bdl-ichars-to-ichars
                                     (line-top-bdl-ichar line))
@@ -196,25 +201,23 @@
                  for i = index then (incf index)
                  while (< i length)
                  do (setf (aref result i) ichars)
+                 when cursor-ichar
+                   do (loop for ichar across ichars
+                            for x from 0
+                            when (eq cursor-ichar ichar)
+                              do (setq position (cons x i)))
                  finally (when (< i length)
                            (push ichars eol-lines)))
         finally (setf (buffer-visible-bottom-line buffer) (or line prev-line))
-                (return (values result eol-lines))))
+                (return (values result eol-lines position))))
 
 ;; FIXME: Support multi buffers (like split window)
 ;; (defun migrate-buffers ())
 
-(defun migrate-buffer-line (ichars eol-p buffer window y start end)
-  (loop with cursor = (buffer-cursor buffer)
-        with cursor-ichar = (and cursor (bdl-ichar-ichar cursor))
-        with win-width = (window-width window)
+(defun migrate-buffer-line (ichars eol-p window y start end)
+  (loop with win-width = (window-width window)
         for ichar across (ichars-with-padding ichars (- end start))
         for x from start below win-width
-        when (and (eq buffer *current-buffer*)
-                  cursor-ichar
-                  (eq ichar cursor-ichar))
-          do (setf (window-x window) x
-                   (window-y window) y)
         do (set-window-ichar x y ichar)
         when (and ichar (> (ichar-width ichar) 1))
           do (incf x)
@@ -236,21 +239,12 @@
 (defun migrate-buffer (&optional (buffer *current-buffer*) (window *window*))
   (let* ((status-line (buffer-status-line buffer))
          (migrate-line-length (buffer-height-without-status-line buffer)))
-    (when (and (eq buffer *current-buffer*)
-               (or (zerop (line-length (buffer-top-line buffer)))
-                   (top-bdl-p (buffer-cursor buffer))))
-      (let* ((position (buffer-cursor-position buffer))
-             (visible-top-line (buffer-visible-top-line buffer))
-             (top-index (if visible-top-line
-                            (line-index visible-top-line)
-                            0)))
-        (setf (window-x window) (+ (buffer-position-x buffer)
-                                   (car position))
-              (window-y window) (+ (buffer-position-y buffer)
-                                   (- (cdr position)
-                                      top-index)))))
-    (multiple-value-bind (lines eol-lines)
+    (multiple-value-bind (lines eol-lines position)
         (buffer-board buffer migrate-line-length)
+      (setf (window-x window) (+ (car position)
+                                 (buffer-position-x buffer))
+            (window-y window) (+ (cdr position)
+                                 (buffer-position-y buffer)))
       (loop for ichars across lines
             for eol-p = (or (zerop (length ichars))
                             (and (find ichars eol-lines :test #'eq) t))
@@ -259,7 +253,6 @@
             with win-col-end = (+ win-col-start (buffer-width buffer))
             do (migrate-buffer-line ichars
                                     eol-p
-                                    buffer
                                     window
                                     win-row
                                     win-col-start
@@ -267,7 +260,6 @@
             finally (when status-line
                       (migrate-buffer-line status-line
                                            t
-                                           buffer
                                            window
                                            (1- (buffer-height buffer))
                                            win-col-start
@@ -380,21 +372,16 @@
 
 (defun delete-line (&optional (buffer *current-buffer*))
   (let ((current-line (buffer-current-line buffer)))
-    (cursor-down)
+    (cond
+      ((eq current-line (buffer-visible-top-line buffer))
+        (next-line buffer))
+      ((eq current-line (buffer-visible-bottom-line buffer))
+       (cursor-up buffer))
+      (t (cursor-down buffer)))
     (delete-bdl current-line)
+    (when (eq current-line (buffer-visible-bottom-line buffer))
+      (cursor-down buffer))
     (redraw-buffer nil buffer)))
-
-(defun delete-ichar-at-point (x y &optional (buffer *current-buffer*))
-  (unless (zerop (length (buffer-top-line buffer)))
-    (let* ((line (aref (buffer-top-line buffer) y))
-           (ichars (line-ichars line)))
-      (if (zerop (length ichars))
-          (delete-line-at-point y buffer)
-          (progn
-            (delete-ichar-of-line x line)
-            (normalize-x buffer)
-            (redraw-buffer)
-            t)))))
 
 (defun delete-ichar (&optional (buffer *current-buffer*))
   (delete-ichar-at-point (buffer-x buffer) (buffer-y buffer) buffer))
