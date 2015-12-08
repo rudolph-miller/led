@@ -12,9 +12,6 @@
            :make-top-line
            :line-length
            :line-bdl-ichars-length
-           :insert-prev-line
-           :insert-next-line
-           :delete-line
            :iterate-lines))
 (in-package :led.internal.line)
 
@@ -71,33 +68,6 @@
               then (insert-next-bdl-ichar char got)
             do (setf (gethash got *bdl-ichar-line-table*) line)))
     line))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; insert-prev-line
-
-(defun insert-prev-line (object line)
-  (let ((new-line (if (typep object 'line)
-                      object
-                      (make-line object))))
-    (insert-prev new-line line)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; insert-next-line
-
-(defun insert-next-line (object line)
-  (let ((new-line (if (typep object 'line)
-                      object
-                      (make-line object))))
-    (insert-next new-line line)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; delete-line
-
-(defun delete-line (line)
-  (delete-bdl line))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

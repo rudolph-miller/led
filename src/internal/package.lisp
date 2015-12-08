@@ -49,10 +49,6 @@
            :bdl-ichar-index
            :make-top-bdl-ichar
            :make-dbl-ichar
-           :insert-prev-bdl-ichar
-           :insert-next-bdl-ichar
-           :replace-bdl-ichar
-           :delete-bdl-ichar
            :bdl-ichar-length
            :iterate-bdl-ichars
            :bdl-ichars-to-ichars
@@ -65,7 +61,6 @@
            :make-top-line
            :line-length
            :line-bdl-ichars-length
-           :string-to-line
            :iterate-lines
 
            ;; string
