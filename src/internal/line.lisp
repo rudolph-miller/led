@@ -62,6 +62,7 @@
 (defun make-line (string)
   (let* ((bdl-ichar (make-top-bdl-ichar))
          (line (%make-line :value bdl-ichar)))
+    (setf (gethash bdl-ichar *bdl-ichar-line-table*) line)
     (when (and string (> (length string) 0))
       (loop for char across string
             for got = (insert-next (make-bdl-ichar char) bdl-ichar)

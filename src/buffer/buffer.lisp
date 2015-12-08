@@ -11,9 +11,9 @@
            :buffer-width
            :buffer-height
            :buffer-cursor
-           :buffer-top-row
            :buffer-status
            :buffer-top-line
+           :buffer-cursor-position
            :buffer-content
            :set-buffer-content
            :redraw-buffer
@@ -76,6 +76,26 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; buffer-cursor-position
+
+(defun buffer-cursor-x (buffer)
+  (let ((cursor (buffer-cursor buffer)))
+    (if (or (not cursor)
+            (top-bdl-p cursor))
+        0
+        (bdl-ichar-index cursor))))
+
+(defun buffer-cursor-y (buffer)
+  (if (buffer-cursor buffer)
+      (line-index (buffer-current-line buffer))
+      0))
+
+(defun buffer-cursor-position (buffer)
+  (cons (buffer-cursor-x buffer)
+        (buffer-cursor-y buffer)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer-status
 
 (defgeneric buffer-status (buffer)
@@ -98,7 +118,7 @@
 (defmethod initialize-instance :around ((buffer buffer) &rest initargs)
   (declare (ignore initargs))
   (call-next-method)
-  (when (slot-boundp buffer 'lines)
+  (when (and *window* (slot-boundp buffer 'lines))
     (redraw-buffer)))
 
 
@@ -121,7 +141,8 @@
 
 (defun initialize-cursor (buffer)
   (if (zerop (line-length (buffer-top-line buffer)))
-      (setf (buffer-cursor buffer) nil)
+      (setf (buffer-cursor buffer) nil
+            (buffer-visible-top-line buffer) nil)
       (setf (buffer-cursor buffer)
             (next (line-top-bdl-ichar
                    (next (buffer-top-line buffer))))
@@ -215,6 +236,19 @@
 (defun migrate-buffer (&optional (buffer *current-buffer*) (window *window*))
   (let* ((status-line (buffer-status-line buffer))
          (migrate-line-length (buffer-height-without-status-line buffer)))
+    (when (and (eq buffer *current-buffer*)
+               (or (zerop (line-length (buffer-top-line buffer)))
+                   (top-bdl-p (buffer-cursor buffer))))
+      (let* ((position (buffer-cursor-position buffer))
+             (visible-top-line (buffer-visible-top-line buffer))
+             (top-index (if visible-top-line
+                            (line-index visible-top-line)
+                            0)))
+        (setf (window-x window) (+ (buffer-position-x buffer)
+                                   (car position))
+              (window-y window) (+ (buffer-position-y buffer)
+                                   (- (cdr position)
+                                      top-index)))))
     (multiple-value-bind (lines eol-lines)
         (buffer-board buffer migrate-line-length)
       (loop for ichars across lines
@@ -281,7 +315,7 @@
 
 (defun cursor-up (&optional (buffer *current-buffer*))
   (flet ((decf-cursor-y ()
-           (let* ((index (bdl-ichar-index (buffer-cursor buffer)))
+           (let* ((index (buffer-cursor-x buffer))
                   (prev (prev (buffer-current-line buffer)))
                   (prev-top-bdl-ichar (line-top-bdl-ichar prev)))
              (setf (buffer-cursor buffer)
@@ -300,7 +334,7 @@
 
 (defun cursor-down (&optional (buffer *current-buffer*))
   (flet ((incf-cursor-y ()
-           (let* ((index (bdl-ichar-index (buffer-cursor buffer)))
+           (let* ((index (buffer-cursor-x buffer))
                   (next (next (buffer-current-line buffer)))
                   (next-top-bdl-ichar (line-top-bdl-ichar next)))
              (setf (buffer-cursor buffer)

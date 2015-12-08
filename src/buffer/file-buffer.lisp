@@ -33,11 +33,8 @@
 
 (defmethod buffer-status ((buffer file-buffer))
   (let* ((path (file-buffer-path buffer))
-         (bdl-ichar (buffer-cursor buffer))
-         (current-line (bdl-ichar-line bdl-ichar))
-         (x (bdl-ichar-index bdl-ichar))
-         (y (line-index current-line)))
-    (format nil "FILE: ~a (~a,~a)" path x y)))
+         (position (buffer-cursor-position buffer)))
+    (format nil "FILE: ~a (~a,~a)" path (car position) (cdr position))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

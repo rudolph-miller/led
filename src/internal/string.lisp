@@ -15,13 +15,12 @@
 
 (defun string-to-lines (string)
   (let ((top-line (make-top-line)))
-    (if string
-        (loop with stream = (make-string-input-stream string)
-              for got = (read-line stream nil nil)
-              while got
-              for line = (insert-next (make-line got) top-line)
-                then (insert-next (make-line got) line))
-        (insert-next (make-line nil t) top-line))
+    (when string
+      (loop with stream = (make-string-input-stream string)
+            for got = (read-line stream nil nil)
+            while got
+            for line = (insert-next (make-line got) top-line)
+              then (insert-next (make-line got) line)))
     top-line))
 
 
@@ -47,6 +46,6 @@
         (lambda (bdl-ichar)
           (setf (elt result pos) (ichar-char (bdl-ichar-ichar bdl-ichar)))
           (incf pos)))
-        (setf (elt result pos) #\NewLine)
-        (incf pos)))
+       (setf (elt result pos) #\NewLine)
+       (incf pos)))
     result))
