@@ -26,6 +26,8 @@
            :bdl-index
            :iterate-bdl
            :get-by-index
+           :get-first
+           :get-last
            :insert-prev
            :insert-next
            :replace-bdl
@@ -44,6 +46,7 @@
            ;; bdl-ichar
            :bdl-ichar
            :bdl-ichar-ichar
+           :bdl-ichar-index
            :make-top-bdl-ichar
            :make-dbl-ichar
            :insert-prev-bdl-ichar
@@ -52,6 +55,7 @@
            :delete-bdl-ichar
            :bdl-ichar-length
            :iterate-bdl-ichars
+           :bdl-ichars-to-ichars
 
            ;; line
            :make-line

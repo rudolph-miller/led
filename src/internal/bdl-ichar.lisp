@@ -4,6 +4,7 @@
         :led.internal.bidirectional-link
         :led.internal.ichar)
   (:export :bdl-ichar
+           :bdl-ichar-index
            :bdl-ichar-ichar
            :make-top-bdl-ichar
            :make-dbl-ichar
@@ -12,7 +13,8 @@
            :replace-bdl-ichar
            :delete-bdl-ichar
            :bdl-ichar-length
-           :iterate-bdl-ichars))
+           :iterate-bdl-ichars
+           :bdl-ichars-to-ichars))
 (in-package :led.internal.bdl-ichar)
 
 
@@ -96,3 +98,17 @@
 
 (defun iterate-bdl-ichars (top-bdl-ichar fn)
   (iterate-bdl top-bdl-ichar fn))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; bdl-ichars-to-ichars
+
+(defun bdl-ichars-to-ichars (top-bdl-ichar)
+  (let ((result (make-array (bdl-ichar-length top-bdl-ichar)))
+        (position 0))
+    (iterate-bdl-ichars
+     top-bdl-ichar
+     (lambda (bdl-ichar)
+       (setf (aref result position) (bdl-ichar-ichar bdl-ichar))
+       (incf position)))
+    result))

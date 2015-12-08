@@ -19,6 +19,8 @@
            :bdl-index
            :iterate-bdl
            :get-by-index
+           :get-first
+           :get-last
            :insert-prev
            :insert-next
            :replace-bdl
@@ -123,13 +125,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; get-by-index
 
-(defun get-by-index (index bdl)
-  (assert (> index (bdl-index bdl)))
+(defun get-by-index (index top-bdl)
+  (assert (top-bdl-p top-bdl))
   (iterate-bdl
-   bdl
+   top-bdl
    (lambda (item)
      (when (= (bdl-index item) index)
        (return-from get-by-index item)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; get-first
+
+(defun get-first (top-bdl)
+  (assert (top-bdl-p top-bdl))
+  (next top-bdl))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; get-last
+
+(defun get-last (top-bdl)
+  (assert (top-bdl-p top-bdl))
+  (prev top-bdl))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; insert-prev
@@ -187,3 +205,4 @@
     (setf (bdl-next prev) next)
     (setf (bdl-prev next) prev)
     t))
+
