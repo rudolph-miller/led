@@ -76,6 +76,13 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; buffer-has-at-least-one-line-p
+
+(defun buffer-has-at-least-one-line-p (buffer)
+  (has-at-least-one-p (buffer-top-line buffer)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; buffer-cursor-position
 
 (defun buffer-cursor-x (buffer)
@@ -283,10 +290,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; cursor
 
+(defun visible-bottom-p (buffer)
+  (eq (buffer-current-line buffer)
+      (buffer-visible-bottom-line buffer)))
+
+(defun visible-top-p (buffer)
+  (eq (buffer-current-line buffer)
+      (buffer-visible-top-line buffer)))
+
+(defun not-on-the-edge-p (buffer)
+  (and (not (visible-bottom-p buffer))
+       (not (visible-top-p buffer))))
+
 (defun prev-line (&optional (buffer *current-buffer*))
   (when (prev (buffer-visible-top-line buffer))
-    (unless (bdl-index< (buffer-current-line buffer)
-                        (buffer-visible-bottom-line buffer))
+    (when (visible-bottom-p buffer)
       (cursor-up buffer))
     (setf (buffer-visible-top-line buffer)
           (prev (buffer-visible-top-line buffer))
@@ -296,8 +314,7 @@
 
 (defun next-line (&optional (buffer *current-buffer*))
   (when (next (buffer-visible-bottom-line buffer))
-    (when (bdl-index<= (buffer-current-line buffer)
-                       (buffer-visible-top-line buffer))
+    (when (visible-top-p buffer)
       (cursor-down buffer))
     (setf (buffer-visible-top-line buffer)
           (next (buffer-visible-top-line buffer))
@@ -317,8 +334,7 @@
     (when (buffer-cursor buffer)
       (prog1
           (cond
-            ((bdl-index> (buffer-current-line buffer)
-                         (buffer-visible-top-line buffer))
+            ((not-on-the-edge-p buffer)
              (decf-cursor-y) t)
             ((prev-line)
              (decf-cursor-y) t)
@@ -337,17 +353,16 @@
     (when (buffer-cursor buffer)
       (prog1
           (cond
-            (#1=(bdl-index< (buffer-current-line buffer)
-                            (buffer-visible-bottom-line buffer))
-                (incf-cursor-y) t)
+            ((not-on-the-edge-p buffer)
+             (incf-cursor-y) t)
             ((and (next-line buffer)
-                  #1#)
+                  (not-on-the-edge-p buffer))
              (incf-cursor-y) t)
             (t nil))
         (redraw-buffer nil buffer)))))
 
 (defun cursor-left (&optional (buffer *current-buffer*))
-  (when (and (buffer-cursor buffer)
+  (when (and (buffer-has-at-least-one-line-p buffer)
              (prev (buffer-cursor buffer)))
     (setf (buffer-cursor buffer)
           (prev (buffer-cursor buffer)))
@@ -355,7 +370,7 @@
     t))
 
 (defun cursor-right (&optional (buffer *current-buffer*))
-  (when (and (buffer-cursor buffer)
+  (when (and (buffer-has-at-least-one-line-p buffer)
              (next (buffer-cursor buffer)))
     (setf (buffer-cursor buffer)
           (next (buffer-cursor buffer)))
@@ -363,14 +378,14 @@
     t))
 
 (defun cursor-left-most (&optional (buffer *current-buffer*))
-  (when (buffer-cursor buffer)
+  (when (buffer-has-at-least-one-line-p buffer)
     (setf (buffer-cursor buffer)
           (get-first (line-top-bdl-ichar (buffer-current-line buffer))))
     (redraw-buffer nil buffer)
     t))
 
 (defun cursor-right-most (&optional (buffer *current-buffer*))
-  (when (buffer-cursor buffer)
+  (when (buffer-has-at-least-one-line-p buffer)
     (setf (buffer-cursor buffer)
           (get-last (line-top-bdl-ichar (buffer-current-line buffer))))
     (redraw-buffer nil buffer)
@@ -380,9 +395,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; delete
 
-;; FIXME: empty line
 (defun delete-line (&optional (buffer *current-buffer*))
-  (when (buffer-cursor buffer)
+  (when (buffer-has-at-least-one-line-p buffer)
     (let ((current-line (buffer-current-line buffer)))
       (cond
         ((eq current-line (buffer-visible-top-line buffer))
@@ -397,19 +411,21 @@
       t)))
 
 (defun delete-ichar (&optional (buffer *current-buffer*))
-  (let ((cursor (buffer-cursor buffer)))
-    (when (and cursor
-               (or (cursor-right)
-                   (cursor-left)
-                   (and (not (top-bdl-p cursor))
-                        (setf (buffer-cursor buffer)
-                              (line-top-bdl-ichar (buffer-current-line buffer)))))
-      (delete-bdl cursor)
+  (when (buffer-has-at-least-one-line-p buffer)
+    (let ((cursor (buffer-cursor buffer)))
+      (cond
+        ((or (cursor-right)
+             (cursor-left))
+         (delete-bdl cursor))
+        ((not (top-bdl-p cursor))
+         (setf (buffer-cursor buffer)
+               (line-top-bdl-ichar (buffer-current-line buffer)))
+         (delete-bdl cursor)))
       (redraw-buffer nil buffer)
-      t))))
+      t)))
 
 (defun delete-prev-ichar (&optional (buffer *current-buffer*))
-  (when (buffer-cursor buffer)
+  (when (buffer-has-at-least-one-line-p buffer)
     (let ((prev (prev (buffer-cursor buffer))))
       (when prev
         (delete-bdl prev)
@@ -419,10 +435,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; replace
-
-(defun ensure-buffer-has-more-than-one-lines (buffer)
-  (when (zerop (length (buffer-top-line buffer)))
-    (setf (buffer-top-line buffer) (vector (make-line nil)))))
 
 (defun replace-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
   (ensure-buffer-has-more-than-one-lines buffer)

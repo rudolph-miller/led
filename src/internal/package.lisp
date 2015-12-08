@@ -32,6 +32,7 @@
            :insert-next
            :replace-bdl
            :delete-bdl
+           :has-at-least-one-p
    
            ;; ichar
            :ichar

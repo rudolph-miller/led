@@ -24,7 +24,8 @@
            :insert-prev
            :insert-next
            :replace-bdl
-           :delete-bdl))
+           :delete-bdl
+           :has-at-least-one-p))
 (in-package :led.internal.bidirectional-link)
 
 
@@ -201,3 +202,9 @@
     (setf (bdl-prev next) prev)
     t))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; has-at-least-one-p
+
+(defun has-at-least-one-p (bdl)
+  (> (bdl-length bdl) 0))
