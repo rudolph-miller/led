@@ -28,11 +28,11 @@
            :delete-line
            :delete-ichar
            :delete-prev-ichar
-           :replace-ichar
            :insert-new-line
            :insert-next-line
            :insert-eol
-           :insert-ichar))
+           :insert-ichar
+           :replace-ichar))
 (in-package :led.buffer.buffer)
 
 
@@ -150,11 +150,10 @@
   (if (zerop (line-length (buffer-top-line buffer)))
       (setf (buffer-cursor buffer) nil
             (buffer-visible-top-line buffer) nil)
-      (setf (buffer-cursor buffer)
-            (next (line-top-bdl-ichar
-                   (next (buffer-top-line buffer))))
-            (buffer-visible-top-line buffer)
-            (next (buffer-top-line buffer))))
+      (let ((next (next (buffer-top-line buffer))))
+        (setf (buffer-cursor buffer) (or (next (line-top-bdl-ichar next))
+                                         (line-top-bdl-ichar next))
+              (buffer-visible-top-line buffer) next)))
   t)
 
 
@@ -290,6 +289,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; cursor
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; UGLY!!!!!!!!!!!!!!!
+
 (defun visible-bottom-p (buffer)
   (eq (buffer-current-line buffer)
       (buffer-visible-bottom-line buffer)))
@@ -334,7 +336,7 @@
     (when (buffer-cursor buffer)
       (prog1
           (cond
-            ((not-on-the-edge-p buffer)
+            ((not (visible-top-p buffer))
              (decf-cursor-y) t)
             ((prev-line)
              (decf-cursor-y) t)
@@ -353,10 +355,10 @@
     (when (buffer-cursor buffer)
       (prog1
           (cond
-            ((not-on-the-edge-p buffer)
+            ((not (visible-bottom-p buffer))
              (incf-cursor-y) t)
             ((and (next-line buffer)
-                  (not-on-the-edge-p buffer))
+                  (not (visible-bottom-p buffer)))
              (incf-cursor-y) t)
             (t nil))
         (redraw-buffer nil buffer)))))
@@ -400,13 +402,17 @@
     (let ((current-line (buffer-current-line buffer)))
       (cond
         ((eq current-line (buffer-visible-top-line buffer))
-         (next-line buffer))
+         (or (next-line buffer)
+             (cursor-down buffer)))
         ((eq current-line (buffer-visible-bottom-line buffer))
          (cursor-up buffer))
         (t (cursor-down buffer)))
       (delete-bdl current-line)
-      (when (eq current-line (buffer-visible-bottom-line buffer))
+      (when (and (eq current-line (buffer-visible-bottom-line buffer))
+                 (next (buffer-current-line buffer)))
         (cursor-down buffer))
+      (when (not (buffer-has-at-least-one-line-p buffer))
+        (initialize-cursor buffer))
       (redraw-buffer nil buffer)
       t)))
 
@@ -434,53 +440,26 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; replace
+;; insert
 
-(defun replace-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
-  (ensure-buffer-has-more-than-one-lines buffer)
-  (replace-ichar-at-point ichar x (aref (buffer-top-line buffer) y))
+(defun ensure-buffer-has-at-least-one-line (buffer)
+  (when (not (buffer-has-at-least-one-line-p buffer))
+    (let ((new-line (make-line nil)))
+      (insert-next new-line (buffer-top-line buffer))
+      (initialize-cursor buffer))
+    t))
+
+(defun insert-new-line (&optional (buffer *current-buffer*))
+  (or (ensure-buffer-has-at-least-one-line buffer)
+      (insert-prev (make-line nil) (buffer-current-line buffer)))
   (redraw-buffer nil buffer)
   t)
 
-(defun replace-ichar (ichar &optional (buffer *current-buffer*))
-  (replace-ichar-at-point ichar (buffer-x buffer) (buffer-y buffer) buffer))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; insert
-
-(defun insert-new-line-at-point (y &optional (buffer *current-buffer*))
-  (ensure-buffer-has-more-than-one-lines buffer)
-  (let ((lines (buffer-top-line buffer)))
-    (setf (buffer-top-line buffer)
-          (concatenate 'vector
-                       (subseq lines 0 y)
-                       (vector (make-line nil))
-                       (subseq lines y))))
-  (normalize-x buffer)
-  (redraw-buffer)
-  t)
-
-(defun insert-new-line (&optional (buffer *current-buffer*))
-  (insert-new-line-at-point (buffer-y buffer) buffer))
-
 (defun insert-next-line (&optional (buffer *current-buffer*))
-  (insert-new-line-at-point (1+ (buffer-y buffer)) buffer))
-
-(defun insert-eol-at-point (x y &optional (buffer *current-buffer*))
-  (ensure-buffer-has-more-than-one-lines buffer)
-  (let* ((lines (buffer-top-line buffer))
-         (ichars (line-ichars (aref lines y))))
-    (setf (buffer-top-line buffer)
-          (concatenate 'vector
-                       (subseq lines 0 y)
-                       (list (make-line (subseq ichars 0 x) t)
-                             (make-line (subseq ichars x) t))
-                       (subseq lines (1+ y))))
-    (incf (buffer-y buffer))
-    (setf (buffer-x buffer) 0)
-    (redraw-buffer)
-    t))
+  (ensure-buffer-has-at-least-one-line buffer)
+  (insert-next (make-line nil) (buffer-current-line buffer))
+  (redraw-buffer nil buffer)
+  t)
 
 (defun insert-eol (&optional (buffer *current-buffer*))
   (insert-eol-at-point (buffer-x buffer) (buffer-y buffer) buffer))
@@ -493,3 +472,15 @@
 
 (defun insert-ichar (ichar &optional (buffer *current-buffer*))
   (insert-ichar-at-point ichar (buffer-x buffer) (buffer-y buffer) buffer))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; replace
+
+(defun replace-ichar-at-point (ichar x y &optional (buffer *current-buffer*))
+  (replace-ichar-at-point ichar x (aref (buffer-top-line buffer) y))
+  (redraw-buffer nil buffer)
+  t)
+
+(defun replace-ichar (ichar &optional (buffer *current-buffer*))
+  (replace-ichar-at-point ichar (buffer-x buffer) (buffer-y buffer) buffer))
